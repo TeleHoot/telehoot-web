@@ -1,11 +1,20 @@
 import { type FC, Suspense } from "react";
 import { AppRouter } from "./providers/AppRouter/AppRouter";
+import { QueryClient, QueryClientProvider } from "react-query";
+import React from "react";
+
+const queryClient = new QueryClient();
 
 const App: FC = () => {
+
   return (
-    <Suspense fallback={''}>
-      <AppRouter />
-    </Suspense>
+    <React.StrictMode>
+      <QueryClientProvider client={queryClient}>
+        <Suspense fallback={""}>
+          <AppRouter />
+        </Suspense>
+      </QueryClientProvider>
+    </React.StrictMode>
   );
 };
 
