@@ -7,12 +7,12 @@ export const getUserOrganization = async () => {
 };
 
 export const createOrganization = async (data: OrganizationData) => {
-  const org = await api.post<OrganizationData>("/organizations/", {
+  const org = await api.post<void, Organization>("/organizations/", {
     name: data.name,
     description: data.description,
   });
   if (data.image)
-    await api.post<OrganizationData>("/organizations/" + org.data.id + "/image", {
+    await api.post<OrganizationData>("/organizations/" + org.id + "/image", {
         file: data.image,
       },
       {

@@ -6,6 +6,7 @@ import {
   PropsWithChildren,
   ReactNode,
   Suspense,
+  useContext,
   useEffect,
   useState,
 } from "react";
@@ -14,6 +15,8 @@ import { getMe, User } from "@entity/User";
 import { useQuery } from "react-query";
 import { Header } from "@shared/components/Header";
 import { getUserOrganization, Organization } from "@entity/Organization";
+import { Organization as OrganizationPage } from "@pages/Organization";
+import { About } from "@pages/About";
 
 const ToLazy = (LazyComponent: LazyExoticComponent<FC>): ReactNode => (
   <Suspense fallback={""}>
@@ -42,7 +45,10 @@ const OrgProvider: FC<PropsWithChildren> = props => {
       setContextData({
         organizations: orgData.data,
         activeOrganization: activeOrganization ? activeOrganization : orgData.data[0],
-        setActiveOrganization: (org: Organization) => setContextData(prev => ({ ...prev as OrganizationContext, activeOrganization: org })),
+        setActiveOrganization: (org: Organization) => setContextData(prev => ({
+          ...prev as OrganizationContext,
+          activeOrganization: org,
+        })),
       });
     }
   }, [orgData?.data]);
@@ -80,11 +86,30 @@ export const ProtectedRoute = (): ReactNode => {
     </div>);
 };
 
+const RedirectToFirstOrganization: FC = () => {
+  const orgContext = useContext(OrganizationContext);
+
+  if (orgContext?.activeOrganization)
+    return <Navigate to={`/organization/${orgContext.activeOrganization.id}`} replace />;
+};
+
 export const ROUTES: RouteObject[] = [
   {
     path: "/",
     element: <ProtectedRoute />,
-    children: [],
+    children: [
+      {
+        index: true,
+        element: <RedirectToFirstOrganization />,
+      },
+      {
+        path: "organization/:id",
+        element: ToLazy(OrganizationPage),
+        children: [{
+          path: 'about',
+          element: ToLazy(About)
+        }]
+      }],
   },
   {
     path: "/login",

@@ -8,5 +8,5 @@ export const auth = async (data: TelegramLoginData): Promise<void> => {
 }
 
 export const getMe = async ()  => {
-  return await api.get<User>('auth/me');
+  return await api.get<User>('users/me');
 }
