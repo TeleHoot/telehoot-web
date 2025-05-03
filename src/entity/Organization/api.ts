@@ -3,7 +3,7 @@ import { Organization } from "@entity/Organization/Organization.types";
 import { OrganizationData } from "@feature/CreateOrganization";
 
 export const getUserOrganization = async () => {
-  return await api.get<Organization[]>("/organizations/");
+  return await api.get<Organization[]>("/users/me/organizations");
 };
 
 export const createOrganization = async (data: OrganizationData) => {

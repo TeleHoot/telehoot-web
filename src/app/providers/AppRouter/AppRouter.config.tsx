@@ -17,6 +17,9 @@ import { Header } from "@shared/components/Header";
 import { getUserOrganization, Organization } from "@entity/Organization";
 import { Organization as OrganizationPage } from "@pages/Organization";
 import { About } from "@pages/About";
+import { Quizzes } from "@pages/Quizzes";
+import { CreateQuiz } from "@pages/CreateQuiz";
+import { Memberships } from "@pages/Memberships";
 
 const ToLazy = (LazyComponent: LazyExoticComponent<FC>): ReactNode => (
   <Suspense fallback={""}>
@@ -106,9 +109,23 @@ export const ROUTES: RouteObject[] = [
         path: "organization/:id",
         element: ToLazy(OrganizationPage),
         children: [{
-          path: 'about',
-          element: ToLazy(About)
-        }]
+          path: "about",
+          element: ToLazy(About),
+        }, {
+          path: "quizzes",
+          element: ToLazy(Quizzes),
+        }, {
+          path: "memberships",
+          element: ToLazy(Memberships),
+        },
+        ],
+      }, {
+        path: "quiz",
+        element: ToLazy(CreateQuiz),
+        children: [{
+          path: ":id",
+          element: ToLazy(CreateQuiz),
+        }],
       }],
   },
   {

@@ -1,14 +1,11 @@
-import { useContext, useEffect, useState } from "react";
+import { useState } from "react";
 import { Tabs, TabsList, TabsTrigger } from "@shared/components/ui/tabs";
-import { Avatar, AvatarFallback, AvatarImage } from "@shared/components/ui/avatar";
-import { Calendar } from "lucide-react";
-import { OrganizationContext } from "@app/providers/AppRouter/AppRouter.config";
-import dayjs from "dayjs";
+
 import { TabsContent } from "@radix-ui/react-tabs";
 import { Navigate, Outlet } from "react-router-dom";
 
 const ABOUT_PAGE = "about";
-const QUIZ_PAGE = "quiz";
+const QUIZ_PAGE = "quizzes";
 const MEMBERS_PAGE = "members";
 const SETTINGS_PAGE = "settings";
 
@@ -24,10 +21,10 @@ const Organization = () => {
           <TabsTrigger value="about">
             Обзор
           </TabsTrigger>
-          <TabsTrigger value="quiz">
+          <TabsTrigger value="quizzes">
             Квизы
           </TabsTrigger>
-          <TabsTrigger value="members">
+          <TabsTrigger value="memberships">
             Пользователи
           </TabsTrigger>
           <TabsTrigger value="settings" className="hidden md:flex">
@@ -37,6 +34,12 @@ const Organization = () => {
 
         <TabsContent value={'about'}>
           <Navigate to={'about'}/>
+        </TabsContent>
+        <TabsContent value={'quizzes'}>
+          <Navigate to={'quizzes'}/>
+        </TabsContent>
+        <TabsContent value={'memberships'}>
+          <Navigate to={'memberships'}/>
         </TabsContent>
       </Tabs>
 
