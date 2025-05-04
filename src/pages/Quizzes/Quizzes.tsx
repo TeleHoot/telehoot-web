@@ -8,7 +8,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@shared/components/ui/dropdown-menu";
-import { MoreVertical } from "lucide-react";
+import { MoreVertical, Search, FileQuestion, ChevronLeft, ChevronRight } from "lucide-react";
 import {
   Pagination,
   PaginationContent,
@@ -25,7 +25,7 @@ import { useNavigate } from "react-router-dom";
 const QuizzesPage = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10;
+  const itemsPerPage = 8;
   const organizationContext = useContext(OrganizationContext);
   const currentOrganizationId = organizationContext?.activeOrganization.id;
 
@@ -67,24 +67,60 @@ const QuizzesPage = () => {
     console.log("Запустить квиз:", quizId);
   };
 
+  // Общие стили для кнопки создания
+  const createButtonStyle = {
+    width: "197px",
+    height: "40px",
+    backgroundColor: "#0D0BCC",
+    color: "white",
+    fontFamily: "Inter, sans-serif",
+  };
+
+  // Общий компонент для заголовка
+  const PageHeader = () => (
+    <div className="flex justify-between items-center mb-6">
+      <h1 className="font-inter font-normal text-[20px] text-[#18191B]">Все квизы</h1>
+    </div>
+  );
+
+  // Общий компонент для поиска и кнопки создания
+  const SearchAndCreate = ({ disabledSearch = false }: { disabledSearch?: boolean }) => (
+    <div className="flex gap-4 mb-6 w-full">
+      <div className="relative flex-1">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+        <Input
+          placeholder="Поиск по названию или автору..."
+          value={searchTerm}
+          onChange={(e) => {
+            setSearchTerm(e.target.value);
+            setCurrentPage(1);
+          }}
+          className="pl-9"
+          disabled={disabledSearch}
+        />
+      </div>
+      <Button
+        onClick={handleCreateQuiz}
+        style={createButtonStyle}
+        className="font-inter"
+      >
+        Создать квиз
+      </Button>
+    </div>
+  );
+
   // Рендер состояния загрузки
   if (isLoading) {
     return (
-      <div className="container mx-auto py-8">
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-bold">Квизы</h1>
-        </div>
-
-        <div className="flex gap-4 mb-6">
-          <Skeleton className="h-10 w-[400px]" />
-          <Skeleton className="h-10 w-[120px]" />
-        </div>
+      <div className="container mx-auto py-8 max-w-[890px]">
+        <PageHeader />
+        <SearchAndCreate disabledSearch />
 
         <div className="rounded-md border">
           <Table>
             <TableHeader>
               <TableRow>
-                {[...Array(5)].map((_, i) => (
+                {[...Array(4)].map((_, i) => (
                   <TableHead key={i}>
                     <Skeleton className="h-4 w-[100px]" />
                   </TableHead>
@@ -94,7 +130,7 @@ const QuizzesPage = () => {
             <TableBody>
               {[...Array(5)].map((_, i) => (
                 <TableRow key={i}>
-                  {[...Array(5)].map((_, j) => (
+                  {[...Array(4)].map((_, j) => (
                     <TableCell key={j}>
                       <Skeleton className="h-4 w-[80%]" />
                     </TableCell>
@@ -111,8 +147,9 @@ const QuizzesPage = () => {
   // Рендер состояния ошибки
   if (error) {
     return (
-      <div className="container mx-auto py-8">
-        <div className="flex flex-col items-center justify-center h-[300px] text-center">
+      <div className="container mx-auto py-8 max-w-[890px]">
+        <PageHeader />
+        <div className="flex flex-col items-center justify-center h-[300px] text-center text-manrope">
           <h2 className="text-xl font-semibold mb-2">Произошла ошибка</h2>
           <p className="text-muted-foreground mb-4">
             Не удалось загрузить список квизов. Пожалуйста, попробуйте позже.
@@ -125,142 +162,184 @@ const QuizzesPage = () => {
     );
   }
 
-  // Рендер пустого состояния
-  if (quizzes?.length === 0) {
-    return (
-      <div className="container mx-auto py-8">
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-bold">Квизы</h1>
-        </div>
-
-        <div className="flex gap-4 mb-6">
-          <Input
-            placeholder="Поиск по названию или автору..."
-            className="max-w-md"
-            disabled
-          />
-          <Button onClick={handleCreateQuiz}>
-            Создать квиз
-          </Button>
-        </div>
-
-        <div className="rounded-md border flex flex-col items-center justify-center h-[300px]">
-          <div className="text-center p-8">
-            <h3 className="text-lg font-medium mb-2">Квизы не найдены</h3>
-            <p className="text-muted-foreground mb-4">
-              У вас пока нет ни одного квиза. Создайте первый квиз.
-            </p>
-            <Button onClick={handleCreateQuiz}>
-              Создать квиз
-            </Button>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // Основной рендер
+  // Основной рендер (включая состояние без квизов)
   return (
-    <div className="container mx-auto py-8">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Квизы</h1>
-      </div>
+    <div className="container mx-auto py-8 max-w-[890px]">
+      <PageHeader />
+      <SearchAndCreate />
 
-      <div className="flex gap-4 mb-6">
-        <Input
-          placeholder="Поиск по названию или автору..."
-          value={searchTerm}
-          onChange={(e) => {
-            setSearchTerm(e.target.value);
-            setCurrentPage(1);
-          }}
-          className="max-w-md"
-        />
-        <Button onClick={handleCreateQuiz}>
-          Создать квиз
-        </Button>
-      </div>
-
-      <div className="rounded-md border">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Название</TableHead>
-              <TableHead>Вопросы</TableHead>
-              <TableHead>Автор</TableHead>
-              <TableHead/>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {paginatedQuizzes?.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={5} className="text-center py-8">
-                  Ничего не найдено по вашему запросу
-                </TableCell>
-              </TableRow>
-            ) : (
-              paginatedQuizzes?.map((quiz) => (
-                <TableRow key={quiz.id}>
-                  <TableCell className="font-medium">{quiz.name}</TableCell>
-
-                  <TableCell>{quiz.questions_count}</TableCell>
-
-                  <TableCell>{quiz.author.username}</TableCell>
-
-                  <TableCell className="text-right">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon">
-                          <MoreVertical className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => handleRunQuiz(quiz.id)}>
-                          Запустить
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => handleEditQuiz(quiz.id)}>
-                          Редактировать
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={() => handleDeleteQuiz(quiz.id)}
-                          className="text-red-600"
-                        >
-                          Удалить
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
-                </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
-      </div>
-
-      {filteredQuizzes?.length > 0 && (
-        <div className="mt-6">
-          <Pagination>
-            <PaginationContent>
-              <PaginationItem>
-                <PaginationPrevious
-                  onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-                  disabled={currentPage === 1}
-                />
-              </PaginationItem>
-              <PaginationItem>
-                <span className="px-4">
-                  Страница {currentPage} из {totalPages}
-                </span>
-              </PaginationItem>
-              <PaginationItem>
-                <PaginationNext
-                  onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-                  disabled={currentPage === totalPages}
-                />
-              </PaginationItem>
-            </PaginationContent>
-          </Pagination>
+      {/* Рендер для состояния без квизов */}
+      {quizzes?.length === 0 ? (
+        <div className="flex flex-col items-center justify-center h-[300px] text-center">
+          <FileQuestion className="h-8 w-8 text-muted-foreground mb-4" style={{ width: 32, height: 32 }} />
+          <h3 className="text-[20px] font-manrope font-normal text-[#18191B] mb-2">
+            В данной организации нет квизов
+          </h3>
+          <p className="text-[12px] font-manrope font-normal text-[#707579]">
+            Создайте свой первый квиз и он отобразится здесь
+          </p>
         </div>
+      ) : (
+        <>
+          <div className="rounded-md border">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Название</TableHead>
+                  <TableHead>Вопросы</TableHead>
+                  <TableHead>Автор</TableHead>
+                  <TableHead/>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {paginatedQuizzes?.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={4} className="text-center py-8 text-manrope">
+                      Ничего не найдено по вашему запросу
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  paginatedQuizzes?.map((quiz) => (
+                    <TableRow key={quiz.id}>
+                      <TableCell className="font-medium font-inter">{quiz.name}</TableCell>
+                      <TableCell className="text-manrope">{quiz.questions_count}</TableCell>
+                      <TableCell className="text-manrope">{quiz.author.username}</TableCell>
+                      <TableCell className="text-right">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon">
+                              <MoreVertical className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" className="font-inter">
+                            <DropdownMenuItem onClick={() => handleRunQuiz(quiz.id)}>
+                              Запустить
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleEditQuiz(quiz.id)}>
+                              Редактировать
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={() => handleDeleteQuiz(quiz.id)}
+                              className="text-red-600"
+                            >
+                              Удалить
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </div>
+
+          {filteredQuizzes && filteredQuizzes.length > itemsPerPage && (
+  <div className="mt-6">
+    <Pagination>
+      <PaginationContent>
+        <PaginationItem>
+          <button
+            onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+            className={`font-inter flex items-center gap-1 font-medium text-[14px] mr-3 ${
+              currentPage === 1 ? 'text-[#A2ACB0] cursor-not-allowed' : 'cursor-pointer'
+            }`}
+            disabled={currentPage === 1}
+          >
+            <ChevronLeft className="h-4 w-4" /> Предыдущий
+          </button>
+        </PaginationItem>
+
+        {/* Всегда показываем первую страницу */}
+        <PaginationItem>
+          <Button
+            onClick={() => setCurrentPage(1)}
+            variant={currentPage === 1 ? 'outline' : 'ghost'}
+            className={`font-inter cursor-pointer ${
+              currentPage === 1
+                ? 'border-[#0D0BCC] bg-white'
+                : 'hover:bg-transparent'
+            }`}
+          >
+            1
+          </Button>
+        </PaginationItem>
+
+        {/* Показываем многоточие, если текущая страница далеко от начала */}
+        {currentPage > 3 && totalPages > 4 && (
+          <PaginationItem>
+            <span className="px-2 text-[#707579]">...</span>
+          </PaginationItem>
+        )}
+
+        {/* Показываем страницы вокруг текущей */}
+        {[...Array(totalPages)].map((_, index) => {
+          const pageNumber = index + 1;
+          // Показываем только близкие к текущей странице номера (и не первую/последнюю)
+          if (
+            pageNumber > 1 &&
+            pageNumber < totalPages &&
+            Math.abs(pageNumber - currentPage) <= 1
+          ) {
+            return (
+              <PaginationItem key={index}>
+                <Button
+                  onClick={() => setCurrentPage(pageNumber)}
+                  variant={currentPage === pageNumber ? 'outline' : 'ghost'}
+                  className={`font-inter cursor-pointer ${
+                    currentPage === pageNumber
+                      ? 'border-[#0D0BCC] bg-white'
+                      : 'hover:bg-transparent'
+                  }`}
+                >
+                  {pageNumber}
+                </Button>
+              </PaginationItem>
+            );
+          }
+          return null;
+        })}
+
+        {/* Показываем многоточие, если текущая страница далеко от конца */}
+        {currentPage < totalPages - 2 && totalPages > 4 && (
+          <PaginationItem>
+            <span className="px-2 text-[#707579]">...</span>
+          </PaginationItem>
+        )}
+
+        {/* Всегда показываем последнюю страницу, если она не первая */}
+        {totalPages > 1 && (
+          <PaginationItem>
+            <Button
+              onClick={() => setCurrentPage(totalPages)}
+              variant={currentPage === totalPages ? 'outline' : 'ghost'}
+              className={`font-inter cursor-pointer ${
+                currentPage === totalPages
+                  ? 'border-[#0D0BCC] bg-white'
+                  : 'hover:bg-transparent'
+              }`}
+            >
+              {totalPages}
+            </Button>
+          </PaginationItem>
+        )}
+
+        <PaginationItem>
+          <button
+            onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+            className={`font-inter flex items-center gap-1 font-medium text-[14px] ml-3 ${
+              currentPage === totalPages ? 'text-[#A2ACB0] cursor-not-allowed' : 'cursor-pointer'
+            }`}
+            disabled={currentPage === totalPages}
+          >
+            Следующий <ChevronRight className="h-4 w-4" />
+          </button>
+        </PaginationItem>
+      </PaginationContent>
+    </Pagination>
+  </div>
+)}
+        </>
       )}
     </div>
   );

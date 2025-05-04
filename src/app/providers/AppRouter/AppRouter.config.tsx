@@ -77,7 +77,7 @@ export const ProtectedRoute = (): ReactNode => {
     return <Navigate to="/login" replace />;
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col bg-[#F1F1F1]">
       <AuthContext.Provider value={data.data}>
         <OrgProvider>
           <Header />
