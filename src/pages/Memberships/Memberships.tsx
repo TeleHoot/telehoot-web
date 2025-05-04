@@ -10,7 +10,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@shared/components/ui/dropdown-menu";
-import { Check, MoreVertical, X } from "lucide-react";
+import { Check, MoreVertical, X, Search, Loader2 } from "lucide-react";
 import { getMemberships, role } from "@entity/Membership";
 import { OrganizationContext } from "@app/providers/AppRouter/AppRouter.config";
 import { Input } from "@shared/components/ui/input";
@@ -20,6 +20,10 @@ const roleLabels: Record<role, string> = {
   editor: "Редактор",
   presenter: "Ведущий",
 };
+
+// Вынесенные стили для табов
+const tabListStyles = "flex flex-col items-start h-auto bg-transparent shadow-none font-inter text-[16px] text-[#71717A] font-medium";
+const tabTriggerStyles = "w-full shadow-none justify-start data-[state=active]:border-l-[3px] data-[state=active]:border-l-[#0D0BCC] data-[state=active]:bg-transparent data-[state=active]:text-[#09090B] data-[state=active]:shadow-none rounded-none";
 
 export default function UsersPage() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -34,7 +38,13 @@ export default function UsersPage() {
 
   const memberships = membershipsQuery?.data;
 
-  if (isLoading) return <div>Loading...</div>;
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-[calc(100vh-200px)]">
+        <Loader2 className="h-12 w-12 animate-spin text-[#0D0BCC]" />
+      </div>
+    );
+  }
 
   const filteredMemberships = memberships?.filter(member => {
     if (activeTab !== "requests" && member.status !== "approved") return false;
@@ -45,150 +55,193 @@ export default function UsersPage() {
   });
 
   const handleApprove = async (membershipId: string) => {
-    // API call to approve membership
     await approveMembership(membershipId);
     refetch();
   };
 
   const handleReject = async (membershipId: string) => {
-    // API call to reject membership
     await rejectMembership(membershipId);
     refetch();
   };
 
   const handleRemove = async (membershipId: string) => {
-    // API call to remove membership
     await removeMembership(membershipId);
     refetch();
   };
 
   const handleChangeRole = async (membershipId: string, newRole: role) => {
-    // API call to change role
     await changeMembershipRole(membershipId, newRole);
     refetch();
   };
 
   return (
-    <div className="flex gap-6">
-      <div className="flex flex-col gap-4">
-        <Input
-          type="text"
-          placeholder="Поиск пользователей..."
-          className="w-full px-3 py-2 border rounded"
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-        />
-        <div className="w-64 border rounded-lg p-4">
-          <div className="space-y-4">
-            <Tabs
-              value={activeTab}
-              onValueChange={(value) => setActiveTab(value as role | "all" | "requests")}
-              orientation="vertical"
-              className="space-y-2"
-            >
-              <TabsList className="flex flex-col items-start h-auto">
-                <TabsTrigger value="all" className="w-full justify-start">Все</TabsTrigger>
-                <TabsTrigger value="owner" className="w-full justify-start">Администраторы</TabsTrigger>
-                <TabsTrigger value="editor" className="w-full justify-start">Редакторы</TabsTrigger>
-                <TabsTrigger value="presenter" className="w-full justify-start">Ведущие</TabsTrigger>
-                <TabsTrigger value="requests" className="w-full justify-start">Запросы</TabsTrigger>
-              </TabsList>
-            </Tabs>
+    <div className="flex flex-col gap-6">
+      <h1 className="text-[20px] font-manrope font-semibold text-[#000000]">Пользователи</h1>
+
+      <div className="flex gap-6">
+        <div className="flex flex-col gap-4">
+          <div className="relative">
+            <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+            <Input
+              type="text"
+              placeholder="Найдите участника"
+              className="w-full pl-9 border border-[#A2ACB0] shadow-none"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+          <div className="w-64 border border-[#A2ACB0] rounded-lg p-4 shadow-none">
+            <div className="space-y-4">
+              <Tabs
+                value={activeTab}
+                onValueChange={(value) => setActiveTab(value as role | "all" | "requests")}
+                orientation="vertical"
+                className="space-y-2"
+              >
+                <TabsList className={tabListStyles}>
+                  <TabsTrigger value="all" className={tabTriggerStyles}>
+                    Все
+                  </TabsTrigger>
+                  <TabsTrigger value="owner" className={tabTriggerStyles}>
+                    Администраторы
+                  </TabsTrigger>
+                  <TabsTrigger value="editor" className={tabTriggerStyles}>
+                    Редакторы
+                  </TabsTrigger>
+                  <TabsTrigger value="presenter" className={tabTriggerStyles}>
+                    Ведущие
+                  </TabsTrigger>
+                  <TabsTrigger value="requests" className={tabTriggerStyles}>
+                    Запросы
+                  </TabsTrigger>
+                </TabsList>
+              </Tabs>
+            </div>
           </div>
         </div>
-      </div>
 
-      <div className="flex-1">
-        <Card>
-          <CardContent className="pt-6">
-            <div className="space-y-4">
-              {filteredMemberships?.length === 0 ? (
-                <div className="text-center text-muted-foreground py-4">
-                  Пользователи не найдены
-                </div>
-              ) : (
-                filteredMemberships?.map((member) => (
-                  <div
-                    key={`${member.user.id}-${member.role}`}
-                    className="flex items-center justify-between p-3 hover:bg-gray-50 rounded-lg"
-                  >
-                    <div className="flex items-center gap-3">
-                      <Avatar>
-                        <AvatarImage src={member.user.photo_url} />
-                        <AvatarFallback>
-                          {member.user.username.charAt(0)}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div>
-                        <div className="font-medium">{member.user.username}</div>
-                        <div className="text-sm text-muted-foreground">
-                          {roleLabels[member.role]}
-                          {member.status === "pending" && " (Ожидает подтверждения)"}
+        <div className="flex-1">
+          <Card className="shadow-none border-none">
+            <CardContent className="pt-6 px-0">
+              <div className="space-y-4">
+                {filteredMemberships?.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center py-12 gap-4">
+                    {activeTab === "requests" ? (
+                      <>
+                        <Check className="h-8 w-8 text-[#18191B]" />
+                        <div className="font-manrope font-normal text-[20px] text-[#18191B]">
+                          Запросов на присоединение в организацию нет
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <Search className="h-8 w-8 text-[#18191B]" />
+                        <div className="font-manrope font-normal text-[20px] text-[#18191B]">
+                          Такой пользователь не найден
+                        </div>
+                      </>
+                    )}
+                  </div>
+                ) : (
+                  filteredMemberships?.map((member) => (
+                    <div
+                      key={`${member.user.id}-${member.role}`}
+                      className="flex items-center justify-between p-3 hover:bg-gray-50 rounded-lg"
+                    >
+                      <div className="flex items-center gap-4">
+                        <Avatar className="h-16 w-16">
+                          <AvatarImage src={member.user.photo_url} />
+                          <AvatarFallback>
+                            {member.user.username.charAt(0)}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div>
+                          <div className="font-manrope font-semibold text-[16px] text-[#18191B]">
+                            {member.user.username}
+                          </div>
+                          <div className="font-manrope font-normal text-[14px] text-[#707579]">
+                            {roleLabels[member.role]}
+                            {member.status === "pending" && " (Ожидает подтверждения)"}
+                          </div>
                         </div>
                       </div>
-                    </div>
 
-                    <div className="flex items-center gap-2">
-                      {member.status === "pending" ? (
-                        <>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleApprove(member)}
-                          >
-                            <Check className="h-4 w-4 mr-1" /> Принять
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleReject(member)}
-                          >
-                            <X className="h-4 w-4 mr-1" /> Отклонить
-                          </Button>
-                        </>
-                      ) : (
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="sm">
-                              <MoreVertical className="h-4 w-4" />
+                      <div className="flex items-center gap-2">
+                        {member.status === "pending" ? (
+                          <>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleApprove(member.id)}
+                            >
+                              <Check className="h-4 w-4 mr-1" /> Принять
                             </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem
-                              onClick={() => handleChangeRole(member, "owner")}
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleReject(member.id)}
                             >
-                              Изменить роль
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              onClick={() => handleRemove(member)}
-                              className="text-red-600"
-                            >
-                              Удалить из организации
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      )}
+                              <X className="h-4 w-4 mr-1" /> Отклонить
+                            </Button>
+                          </>
+                        ) : (
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="sm">
+                                <MoreVertical className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem
+                                onClick={() => handleChangeRole(member.id, "owner")}
+                              >
+                                Сделать администратором
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onClick={() => handleChangeRole(member.id, "editor")}
+                              >
+                                Сделать редактором
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onClick={() => handleChangeRole(member.id, "presenter")}
+                              >
+                                Сделать ведущим
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onClick={() => handleRemove(member.id)}
+                                className="text-red-600"
+                              >
+                                Удалить из организации
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                ))
-              )}
-            </div>
-          </CardContent>
-        </Card>
+                  ))
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </div>
   );
 }
 
-// Заглушки для API функций (замените на реальные вызовы)
+// Заглушки для API функций
 async function approveMembership(membershipId: string) {
+  // Реализация API вызова
 }
 
 async function rejectMembership(membershipId: string) {
+  // Реализация API вызова
 }
 
 async function removeMembership(membershipId: string) {
+  // Реализация API вызова
 }
 
 async function changeMembershipRole(membershipId: string, newRole: role) {
+  // Реализация API вызова
 }

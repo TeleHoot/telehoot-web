@@ -20,9 +20,14 @@ import { About } from "@pages/About";
 import { Quizzes } from "@pages/Quizzes";
 import { CreateQuiz } from "@pages/CreateQuiz";
 import { Memberships } from "@pages/Memberships";
+import { Loader2 } from "lucide-react"; // Добавлен импорт лоадера
 
 const ToLazy = (LazyComponent: LazyExoticComponent<FC>): ReactNode => (
-  <Suspense fallback={""}>
+  <Suspense fallback={
+    <div className="flex items-center justify-center h-full">
+      <Loader2 className="h-8 w-8 animate-spin text-[#0D0BCC]" />
+    </div>
+  }>
     <LazyComponent />
   </Suspense>
 );
@@ -70,7 +75,11 @@ export const ProtectedRoute = (): ReactNode => {
   });
 
   if (isLoading) {
-    return <>Loading...</>;
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <Loader2 className="h-12 w-12 animate-spin text-[#0D0BCC]" />
+      </div>
+    );
   }
 
   if (!data?.data)

@@ -8,7 +8,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@shared/components/ui/dropdown-menu";
-import { MoreVertical, Search, FileQuestion, ChevronLeft, ChevronRight } from "lucide-react";
+import { MoreVertical, Search, FileQuestion, ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
 import {
   Pagination,
   PaginationContent,
@@ -16,7 +16,6 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@shared/components/ui/pagination";
-import { Skeleton } from "@shared/components/ui/skeleton";
 import { useQuery } from "react-query";
 import { getOrganizationQuizzes } from "@entity/Quiz";
 import { OrganizationContext } from "@app/providers/AppRouter/AppRouter.config";
@@ -102,7 +101,7 @@ const QuizzesPage = () => {
       <Button
         onClick={handleCreateQuiz}
         style={createButtonStyle}
-        className="font-inter"
+        className="font-inter cursor-pointer"
       >
         Создать квиз
       </Button>
@@ -115,30 +114,8 @@ const QuizzesPage = () => {
       <div className="container mx-auto py-8 max-w-[890px]">
         <PageHeader />
         <SearchAndCreate disabledSearch />
-
-        <div className="rounded-md border">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                {[...Array(4)].map((_, i) => (
-                  <TableHead key={i}>
-                    <Skeleton className="h-4 w-[100px]" />
-                  </TableHead>
-                ))}
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {[...Array(5)].map((_, i) => (
-                <TableRow key={i}>
-                  {[...Array(4)].map((_, j) => (
-                    <TableCell key={j}>
-                      <Skeleton className="h-4 w-[80%]" />
-                    </TableCell>
-                  ))}
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+        <div className="flex items-center justify-center h-[300px]">
+          <Loader2 className="h-12 w-12 animate-spin text-[#0D0BCC]" />
         </div>
       </div>
     );
@@ -235,110 +212,110 @@ const QuizzesPage = () => {
           </div>
 
           {filteredQuizzes && filteredQuizzes.length > itemsPerPage && (
-  <div className="mt-6">
-    <Pagination>
-      <PaginationContent>
-        <PaginationItem>
-          <button
-            onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-            className={`font-inter flex items-center gap-1 font-medium text-[14px] mr-3 ${
-              currentPage === 1 ? 'text-[#A2ACB0] cursor-not-allowed' : 'cursor-pointer'
-            }`}
-            disabled={currentPage === 1}
-          >
-            <ChevronLeft className="h-4 w-4" /> Предыдущий
-          </button>
-        </PaginationItem>
+            <div className="mt-6">
+              <Pagination>
+                <PaginationContent>
+                  <PaginationItem>
+                    <button
+                      onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                      className={`font-inter flex items-center gap-1 font-medium text-[14px] mr-3 ${
+                        currentPage === 1 ? 'text-[#A2ACB0] cursor-not-allowed' : 'cursor-pointer'
+                      }`}
+                      disabled={currentPage === 1}
+                    >
+                      <ChevronLeft className="h-4 w-4" /> Предыдущий
+                    </button>
+                  </PaginationItem>
 
-        {/* Всегда показываем первую страницу */}
-        <PaginationItem>
-          <Button
-            onClick={() => setCurrentPage(1)}
-            variant={currentPage === 1 ? 'outline' : 'ghost'}
-            className={`font-inter cursor-pointer ${
-              currentPage === 1
-                ? 'border-[#0D0BCC] bg-white'
-                : 'hover:bg-transparent'
-            }`}
-          >
-            1
-          </Button>
-        </PaginationItem>
+                  {/* Всегда показываем первую страницу */}
+                  <PaginationItem>
+                    <Button
+                      onClick={() => setCurrentPage(1)}
+                      variant={currentPage === 1 ? 'outline' : 'ghost'}
+                      className={`font-inter cursor-pointer ${
+                        currentPage === 1
+                          ? 'border-[#0D0BCC] bg-white'
+                          : 'hover:bg-transparent'
+                      }`}
+                    >
+                      1
+                    </Button>
+                  </PaginationItem>
 
-        {/* Показываем многоточие, если текущая страница далеко от начала */}
-        {currentPage > 3 && totalPages > 4 && (
-          <PaginationItem>
-            <span className="px-2 text-[#707579]">...</span>
-          </PaginationItem>
-        )}
+                  {/* Показываем многоточие, если текущая страница далеко от начала */}
+                  {currentPage > 3 && totalPages > 4 && (
+                    <PaginationItem>
+                      <span className="px-2 text-[#707579]">...</span>
+                    </PaginationItem>
+                  )}
 
-        {/* Показываем страницы вокруг текущей */}
-        {[...Array(totalPages)].map((_, index) => {
-          const pageNumber = index + 1;
-          // Показываем только близкие к текущей странице номера (и не первую/последнюю)
-          if (
-            pageNumber > 1 &&
-            pageNumber < totalPages &&
-            Math.abs(pageNumber - currentPage) <= 1
-          ) {
-            return (
-              <PaginationItem key={index}>
-                <Button
-                  onClick={() => setCurrentPage(pageNumber)}
-                  variant={currentPage === pageNumber ? 'outline' : 'ghost'}
-                  className={`font-inter cursor-pointer ${
-                    currentPage === pageNumber
-                      ? 'border-[#0D0BCC] bg-white'
-                      : 'hover:bg-transparent'
-                  }`}
-                >
-                  {pageNumber}
-                </Button>
-              </PaginationItem>
-            );
-          }
-          return null;
-        })}
+                  {/* Показываем страницы вокруг текущей */}
+                  {[...Array(totalPages)].map((_, index) => {
+                    const pageNumber = index + 1;
+                    // Показываем только близкие к текущей странице номера (и не первую/последнюю)
+                    if (
+                      pageNumber > 1 &&
+                      pageNumber < totalPages &&
+                      Math.abs(pageNumber - currentPage) <= 1
+                    ) {
+                      return (
+                        <PaginationItem key={index}>
+                          <Button
+                            onClick={() => setCurrentPage(pageNumber)}
+                            variant={currentPage === pageNumber ? 'outline' : 'ghost'}
+                            className={`font-inter cursor-pointer ${
+                              currentPage === pageNumber
+                                ? 'border-[#0D0BCC] bg-white'
+                                : 'hover:bg-transparent'
+                            }`}
+                          >
+                            {pageNumber}
+                          </Button>
+                        </PaginationItem>
+                      );
+                    }
+                    return null;
+                  })}
 
-        {/* Показываем многоточие, если текущая страница далеко от конца */}
-        {currentPage < totalPages - 2 && totalPages > 4 && (
-          <PaginationItem>
-            <span className="px-2 text-[#707579]">...</span>
-          </PaginationItem>
-        )}
+                  {/* Показываем многоточие, если текущая страница далеко от конца */}
+                  {currentPage < totalPages - 2 && totalPages > 4 && (
+                    <PaginationItem>
+                      <span className="px-2 text-[#707579]">...</span>
+                    </PaginationItem>
+                  )}
 
-        {/* Всегда показываем последнюю страницу, если она не первая */}
-        {totalPages > 1 && (
-          <PaginationItem>
-            <Button
-              onClick={() => setCurrentPage(totalPages)}
-              variant={currentPage === totalPages ? 'outline' : 'ghost'}
-              className={`font-inter cursor-pointer ${
-                currentPage === totalPages
-                  ? 'border-[#0D0BCC] bg-white'
-                  : 'hover:bg-transparent'
-              }`}
-            >
-              {totalPages}
-            </Button>
-          </PaginationItem>
-        )}
+                  {/* Всегда показываем последнюю страницу, если она не первая */}
+                  {totalPages > 1 && (
+                    <PaginationItem>
+                      <Button
+                        onClick={() => setCurrentPage(totalPages)}
+                        variant={currentPage === totalPages ? 'outline' : 'ghost'}
+                        className={`font-inter cursor-pointer ${
+                          currentPage === totalPages
+                            ? 'border-[#0D0BCC] bg-white'
+                            : 'hover:bg-transparent'
+                        }`}
+                      >
+                        {totalPages}
+                      </Button>
+                    </PaginationItem>
+                  )}
 
-        <PaginationItem>
-          <button
-            onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-            className={`font-inter flex items-center gap-1 font-medium text-[14px] ml-3 ${
-              currentPage === totalPages ? 'text-[#A2ACB0] cursor-not-allowed' : 'cursor-pointer'
-            }`}
-            disabled={currentPage === totalPages}
-          >
-            Следующий <ChevronRight className="h-4 w-4" />
-          </button>
-        </PaginationItem>
-      </PaginationContent>
-    </Pagination>
-  </div>
-)}
+                  <PaginationItem>
+                    <button
+                      onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                      className={`font-inter flex items-center gap-1 font-medium text-[14px] ml-3 ${
+                        currentPage === totalPages ? 'text-[#A2ACB0] cursor-not-allowed' : 'cursor-pointer'
+                      }`}
+                      disabled={currentPage === totalPages}
+                    >
+                      Следующий <ChevronRight className="h-4 w-4" />
+                    </button>
+                  </PaginationItem>
+                </PaginationContent>
+              </Pagination>
+            </div>
+          )}
         </>
       )}
     </div>
