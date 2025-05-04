@@ -1,6 +1,7 @@
-import { useContext, useEffect, useRef, useState } from "react";
+import { useContext, useEffect, useRef, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, ArrowRight, Loader } from "lucide-react";
+import { ChevronLeft, ChevronRight, Loader, LockKeyhole, X, Check, Loader2 } from "lucide-react";
+import { useDropzone } from "react-dropzone";
 
 import { Button } from "@shared/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@shared/components/ui/tabs";
@@ -11,15 +12,15 @@ import { useMutation, useQueryClient } from "react-query";
 import { Answer, createQuestion, Question, QuestionCreate, QuestionTypes, updateQuestion } from "@entity/Question";
 import { createQuiz } from "@entity/Quiz";
 import { OrganizationContext } from "@app/providers/AppRouter/AppRouter.config";
-import { Separator } from "@shared/components/ui/separator";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@shared/components/ui/select";
 import debounce from "debounce";
 import { Checkbox } from "@shared/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@shared/components/ui/radio-group";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@shared/components/ui/tooltip";
 
 const initialQuestion: QuestionCreate = {
   quiz_id: "",
-  title: " ",
+  title: "Текст вопроса",
   type: "single_choice",
   weight: 1,
   order: 1,
@@ -31,6 +32,22 @@ const initialQuestion: QuestionCreate = {
 };
 
 const QUESTIONS_PER_PAGE = 8;
+
+const tabTriggerClass = `
+  px-0 pb-3 relative shadow-none rounded-none
+  text-[#71717A] font-medium font-inter
+  cursor-pointer
+  data-[state=active]:text-[#09090B]
+  data-[state=active]:shadow-none
+  data-[state=active]:after:content-['']
+  data-[state=active]:after:absolute
+  data-[state=active]:after:bottom-0
+  data-[state=active]:after:left-0
+  data-[state=active]:after:w-full
+  data-[state=active]:after:h-[3px]
+  data-[state=active]:after:bg-[#0D0BCC]
+  hover:text-[#09090B]
+`;
 
 const CreateQuiz = () => {
   const navigate = useNavigate();
@@ -46,6 +63,29 @@ const CreateQuiz = () => {
   const [questions, setQuestions] = useState<Question[]>([]);
   const [currentQuestion, setCurrentQuestion] = useState<Question>();
   const [currentPage, setCurrentPage] = useState(0);
+
+  const [preview, setPreview] = useState<string | null>(null);
+  const [fileName, setFileName] = useState<string>("Файл не выбран");
+
+  const [saveTime, setSaveTime] = useState<string>("");
+  const [isSaving, setIsSaving] = useState<boolean>(false);
+
+  const onDrop = useCallback((acceptedFiles: File[]) => {
+    const file = acceptedFiles[0];
+    if (file) {
+      setCurrentQuestion(prev => ({ ...prev as Question, media_path: URL.createObjectURL(file) }));
+      setPreview(URL.createObjectURL(file));
+      setFileName(file.name);
+    }
+  }, []);
+
+  const { getRootProps, getInputProps } = useDropzone({
+    onDrop,
+    accept: {
+      "image/*": [".jpeg", ".jpg", ".png", ".webp"],
+    },
+    maxFiles: 1,
+  });
 
   // Мутация для создания квиза
   const createQuizMutation = useMutation(createQuiz, {
@@ -69,7 +109,6 @@ const CreateQuiz = () => {
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["quizzes"] });
       setCurrentQuestion(data.data);
-      console.log(data)
       setQuestions(prev => [...prev, data.data]);
       // Переходим на последнюю страницу при добавлении нового вопроса
       setCurrentPage(Math.floor((questions.length) / QUESTIONS_PER_PAGE));
@@ -84,6 +123,8 @@ const CreateQuiz = () => {
 
   const handleAddQuestion = () => {
     createQuestionMutation.mutate({ ...initialQuestion, quiz_id: quizId });
+    setPreview(null);
+    setFileName("Файл не выбран");
   };
 
   const debouncedUpdate = useRef(
@@ -102,10 +143,23 @@ const CreateQuiz = () => {
     }
   }, [currentQuestion, debouncedUpdate, quizId]);
 
+  useEffect(() => {
+    if (updateQuestionMutation.isLoading) {
+      setIsSaving(true);
+    } else if (!updateQuestionMutation.isLoading && currentQuestion) {
+      const now = new Date();
+      const formattedTime = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      setSaveTime(formattedTime);
+      setIsSaving(false);
+    }
+  }, [updateQuestionMutation.isLoading, currentQuestion]);
+
   const handleAddAnswer = () => {
     if (!currentQuestion) return;
 
     const order = currentQuestion.answers.length;
+
+    if (order >= 4) return;
 
     const answers: Answer[] = [...currentQuestion?.answers, {
       order: order,
@@ -152,7 +206,32 @@ const CreateQuiz = () => {
     // Находим актуальную версию вопроса из массива questions
     const actualQuestion = questions.find(q => q.id === question.id) || question;
     setCurrentQuestion(actualQuestion);
+    setPreview(actualQuestion.media_path || null);
+    setFileName(actualQuestion.media_path ? "Изображение загружено" : "Файл не выбран");
   };
+
+  const handleNextQuestion = () => {
+    if (!currentQuestion) return;
+    const currentIndex = questions.findIndex(q => q.id === currentQuestion.id);
+    if (currentIndex < questions.length - 1) {
+      const nextQuestion = questions[currentIndex + 1];
+      setCurrentQuestion(nextQuestion);
+      setPreview(nextQuestion.media_path || null);
+      setFileName(nextQuestion.media_path ? "Изображение загружено" : "Файл не выбран");
+    }
+  };
+
+  const handlePrevQuestion = () => {
+    if (!currentQuestion) return;
+    const currentIndex = questions.findIndex(q => q.id === currentQuestion.id);
+    if (currentIndex > 0) {
+      const prevQuestion = questions[currentIndex - 1];
+      setCurrentQuestion(prevQuestion);
+      setPreview(prevQuestion.media_path || null);
+      setFileName(prevQuestion.media_path ? "Изображение загружено" : "Файл не выбран");
+    }
+  };
+
   const totalPages = Math.ceil(questions.length / QUESTIONS_PER_PAGE);
   const paginatedQuestions = questions.slice(
     currentPage * QUESTIONS_PER_PAGE,
@@ -203,131 +282,217 @@ const CreateQuiz = () => {
     });
   };
 
-  return (
-    <div className="flex h-full gap-6">
-      <div className="flex-1">
-        <div className="flex items-center gap-4 mb-6">
-          <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
-          <h1 className="text-2xl font-bold">Создание квиза</h1>
-        </div>
+  const handleRemoveImage = () => {
+    setCurrentQuestion(prev => ({ ...prev as Question, media_path: "" }));
+    setPreview(null);
+    setFileName("Файл не выбран");
+  };
 
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="info">Основная информация</TabsTrigger>
-            <TabsTrigger value="questions" disabled={!quizId}>
+  return (
+    <div className="container mx-auto py-8 max-w-[1000px] px-4">
+      <div className="flex items-center gap-4 mb-10">
+        <Button
+          variant="ghost"
+          onClick={() => navigate(`/organization/${currentOrganizationId}/quizzes`)}
+          className="text-[#707579] font-manrope text-[14px] font-medium p-0 hover:bg-transparent cursor-pointer"
+        >
+          <ChevronLeft className="h-5 w-5" />
+          Вернуться к квизам
+        </Button>
+      </div>
+
+      <Tabs value={activeTab} onValueChange={(value) => {
+        if (value === "questions" && !quizId) return;
+        setActiveTab(value);
+      }} className="text-[16px]">
+        <TabsList className="flex gap-8 p-0 bg-transparent">
+          <TabsTrigger value="info" className={tabTriggerClass}>
+            Основная информация
+          </TabsTrigger>
+          {!quizId ? (
+            <TooltipProvider delayDuration={1}>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <TabsTrigger
+                    value="questions"
+                    className={`${tabTriggerClass} flex items-center gap-2 opacity-50 cursor-not-allowed`}
+                    onClick={(e) => e.preventDefault()}
+                  >
+                    <LockKeyhole className="h-4 w-4" />
+                    Вопросы
+                  </TabsTrigger>
+                </TooltipTrigger>
+                <TooltipContent 
+                  className="bg-white text-[#09090B] border border-[#E5E7EB] font-inter text-[14px] font-normal [&>svg]:hidden"
+                >
+                  <p>Доступ к вопросам откроется после создания квиза</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          ) : (
+            <TabsTrigger value="questions" className={tabTriggerClass}>
               Вопросы
             </TabsTrigger>
-          </TabsList>
+          )}
+        </TabsList>
 
-          <TabsContent value="info">
-            <div className="space-y-6 mt-6">
-              <div className="space-y-2">
-                <Label htmlFor="title">Название квиза</Label>
-                <Input
-                  id="title"
-                  placeholder="Введите название"
-                  value={name}
-                  onChange={(e) =>
-                    setName(e.target.value)
-                  }
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="description">Описание</Label>
-                <Textarea
-                  id="description"
-                  placeholder="Введите описание квиза"
-                  value={description}
-                  onChange={(e) =>
-                    setDescription(e.target.value)
-                  }
-                  rows={5}
-                />
-              </div>
-
-              <Button
-                onClick={handleCreateQuiz}
-                disabled={!name}
-                className="w-full"
-              >
-                Далее
-              </Button>
+        <TabsContent value="info">
+          <div className="space-y-6 mt-6">
+            <div className="space-y-2">
+              <Input
+                id="title"
+                placeholder="Название квиза*"
+                value={name}
+                onChange={(e) =>
+                  setName(e.target.value)
+                }
+                className="w-[418px] text-[#18191B] placeholder:text-[#71717A] [&>input]:text-[#18191B] selection:bg-[#0D0BCC] selection:text-white"
+              />
             </div>
-          </TabsContent>
 
-          <TabsContent value="questions">
-            {/* Пагинация вопросов */}
-            <div className="mb-6 flex gap-4">
+            <div className="space-y-2">
+              <Textarea
+                id="description"
+                placeholder="Описание квиза"
+                value={description}
+                onChange={(e) =>
+                  setDescription(e.target.value)
+                }
+                rows={5}
+                className="w-[418px] text-[#18191B] placeholder:text-[#71717A] [&>textarea]:text-[#18191B] selection:bg-[#0D0BCC] selection:text-white"
+              />
+            </div>
+
+            <Button
+              onClick={handleCreateQuiz}
+              disabled={!name}
+              className="w-[105px] h-[40px] font-inter hover:bg-[#0A09A3] transition-colors cursor-pointer"
+              style={{
+                backgroundColor: !name ? '#A2ACB0' : '#0D0BCC',
+                color: '#FAFAFA'
+              }}
+            >
+              Далее
+            </Button>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="questions">
+          {/* Пагинация вопросов */}
+          <div className="mb-6 flex gap-2">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handlePrevQuestion}
+              disabled={!currentQuestion || questions.findIndex(q => q.id === currentQuestion.id) === 0}
+            >
+              <ChevronLeft className="h-[20px] w-[20px]" />
+            </Button>
+
+            <div className="flex flex-wrap gap-2">
+              {paginatedQuestions.map((question, index) => (
+                <Button
+                  key={question.id}
+                  variant={currentQuestion?.id === question.id ? "outline" : "ghost"}
+                  size="sm"
+                  onClick={() => handleQuestionSelect(question)}
+                  className={`min-w-[40px] min-h-[40px] font-medium text-[14px] text-[#09090B] font-inter ${
+                    currentQuestion?.id === question.id ? 'border-[#0D0BCC]' : ''
+                  }`}
+                >
+                  {currentPage * QUESTIONS_PER_PAGE + index + 1}
+                </Button>
+              ))}
               <Button
                 variant="ghost"
                 size="icon"
-                onClick={handlePrevPage}
-                disabled={currentPage === 0}
+                onClick={handleNextQuestion}
+                disabled={!currentQuestion || questions.findIndex(q => q.id === currentQuestion.id) === questions.length - 1}
               >
-                <ArrowLeft className="h-4 w-4" />
+                <ChevronRight className="h-[20px] w-[20px]" />
               </Button>
-
-              <div className="flex flex-wrap gap-2">
-                {paginatedQuestions.map((question, index) => (
-                  <Button
-                    key={question.id}
-                    variant={currentQuestion?.id === question.id ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => handleQuestionSelect(question)}
-                    className="min-w-[40px] h-10"
-                  >
-                    {currentPage * QUESTIONS_PER_PAGE + index + 1}
-                  </Button>
-                ))}
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleAddQuestion}
-                  className="min-w-[40px] h-10"
-                >
-                  +
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={handleNextPage}
-                  disabled={currentPage >= totalPages - 1 || totalPages === 0}
-                >
-                  <ArrowRight className="h-4 w-4" />
-                </Button>
-              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleAddQuestion}
+                className="min-w-[40px] h-10 font-inter font-medium text-[#A2ACB0] text-[14px] cursor-pointer"
+              >
+                + Добавить вопрос
+              </Button>
             </div>
+          </div>
 
-            <div className="space-y-6 mt-6">
+          <div className="flex gap-6">
+            <div className="w-[418px] space-y-6">
               <div className="space-y-2">
-                <Label htmlFor="question-title">Текст вопроса</Label>
                 <Input
                   id="question-title"
-                  placeholder="Введите вопрос"
+                  placeholder="Текст вопроса"
                   value={currentQuestion?.title}
                   onChange={(e) =>
                     setCurrentQuestion({ ...currentQuestion as Question, title: e.target.value })
                   }
+                  className="w-full text-[#18191B] placeholder:text-[#71717A] [&>input]:text-[#18191B] selection:bg-[#0D0BCC] selection:text-white"
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="question-description">Пояснение к вопросу</Label>
                 <Textarea
                   id="question-description"
-                  placeholder="Введите пояснение (необязательно)"
+                  placeholder="Текст инструкции"
                   value={currentQuestion?.description}
                   onChange={(e) =>
                     setCurrentQuestion({ ...currentQuestion as Question, description: e.target.value })
                   }
                   rows={3}
+                  className="w-full text-[#18191B] placeholder:text-[#71717A] [&>textarea]:text-[#18191B] selection:bg-[#0D0BCC] selection:text-white"
                 />
               </div>
-                <div className="space-y-2">
-                  <Label htmlFor="question-weight">Вес вопроса</Label>
+
+              <div className="space-y-2">
+                <div {...getRootProps()} className="w-full h-[40px] px-4 border border-input rounded-md flex items-center justify-between cursor-pointer hover:bg-accent/50 transition-colors">
+                  <div className="flex items-center gap-2">
+                    <span className="font-inter text-[14px] text-[#09090B] font-medium">Загрузить файл</span>
+                  </div>
+                  <span className="font-inter text-[14px] text-[#A2ACB0] font-normal truncate max-w-[180px]">
+                    {fileName}
+                  </span>
+                  <input {...getInputProps()} />
+                </div>
+                {preview && (
+                  <div className="flex items-center gap-2 mt-2">
+                    <img src={preview} alt="Preview" className="h-10 w-10 object-cover rounded-md" />
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={handleRemoveImage}
+                      className="text-[#0D0BCC] hover:underline"
+                    >
+                      Удалить
+                    </Button>
+                  </div>
+                )}
+              </div>
+
+              <div className="space-y-4">
+                <Label className="text-[#707579] font-inter text-[14px] font-normal">Ответы</Label>
+                <div className="flex gap-4">
+                  <Select
+                    value={currentQuestion?.type}
+                    onValueChange={(value: QuestionTypes) =>
+                      setCurrentQuestion({ ...currentQuestion as Question, type: value })
+                    }
+                  >
+                    <SelectTrigger className="flex-1">
+                      <SelectValue placeholder="Выберите тип" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-white">
+                      <SelectItem value="single_choice">Один ответ</SelectItem>
+                      <SelectItem value="multiple_choice">Несколько ответов</SelectItem>
+                      <SelectItem value="text">Текстовый ответ</SelectItem>
+                    </SelectContent>
+                  </Select>
+
                   <Input
                     id="question-weight"
                     type="number"
@@ -336,155 +501,190 @@ const CreateQuiz = () => {
                     onChange={(e) =>
                       setCurrentQuestion({ ...currentQuestion as Question, weight: Number(e.target.value) })
                     }
+                    className="w-[128px] text-[#18191B] placeholder:text-[#71717A] focus:text-[#18191B] selection:bg-[#0D0BCC] selection:text-white [&>input]:text-[#18191B]"
                   />
                 </div>
-              </div>
 
-              <div className="space-y-2">
-                <Label>Медиафайлы</Label>
-                <Input
-                  type="file"
-                  multiple
-                  onChange={(e) => {
-                    // if (e.target.files) {
-                    //   setCurrentQuestion({
-                    //     ...currentQuestion,
-                    //     media_path: Array.from(e.target.files),
-                    //   });
-                    // }
-                  }}
-                />
-              </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="question-type">Тип вопроса</Label>
-                <Select
-                  value={currentQuestion?.type}
-                  onValueChange={(value: QuestionTypes) =>
-                    setCurrentQuestion({ ...currentQuestion as Question, type: value })
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Выберите тип" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="single_choice">Один ответ</SelectItem>
-                    <SelectItem value="multiple_choice">Несколько ответов</SelectItem>
-                    <SelectItem value="text">Текстовый ответ</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {currentQuestion?.type === "text" ? (
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <Label>Правильные текстовые ответы</Label>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={handleAddAnswer}
-                    >
-                      Добавить вариант ответа
-                    </Button>
-                  </div>
-
-                  <div className="space-y-3">
-                    {currentQuestion?.answers?.map((answer, index) => (
-                      <div key={index} className="flex items-center gap-2">
+                {currentQuestion?.type === "text" ? (
+                  <div className="space-y-4">
+                    <div className="space-y-3">
+                      {currentQuestion?.answers?.map((answer, index) => (
+                        <div key={index} className="flex items-center gap-2">
+                          <Input
+                            value={answer.text}
+                            onChange={(e) => handleAnswerChange(index, e.target.value)}
+                            placeholder={`Вариант ответа ${index + 1}`}
+                            className="w-full text-[#18191B] placeholder:text-[#71717A] [&>input]:text-[#18191B] selection:bg-[#0D0BCC] selection:text-white border-0 shadow-none"
+                          />
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleRemoveAnswer(index)}
+                            disabled={currentQuestion.answers.length <= 1}
+                            className="h-[18px] w-[18px] p-0 border-0 shadow-none"
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      ))}
+                      <div className="flex items-center gap-2">
                         <Input
-                          value={answer.text}
-                          onChange={(e) => handleAnswerChange(index, e.target.value)}
-                          placeholder={`Вариант ответа ${index + 1}`}
+                          readOnly
+                          placeholder="Добавить вариант"
+                          className="w-full text-[#A2ACB0] border-0 shadow-none cursor-pointer"
+                          onClick={handleAddAnswer}
                         />
                         <Button
                           variant="ghost"
                           size="icon"
-                          onClick={() => handleRemoveAnswer(index)}
-                          disabled={currentQuestion.answers.length <= 1}
+                          className="invisible"
                         >
-                          ×
+                          <X className="h-4 w-4" />
                         </Button>
                       </div>
-                    ))}
+                    </div>
                   </div>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <Label>Варианты ответов</Label>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={handleAddAnswer}
-                    >
-                      Добавить вариант
-                    </Button>
-                  </div>
-
-                  <div className="space-y-3">
-                    {currentQuestion?.type === "single_choice" ? (
-                      <RadioGroup>
-                        {currentQuestion?.answers?.map((option, index) => (
-                          <div key={index} className="flex items-center gap-2">
+                ) : (
+                  <div className="space-y-4">
+                    <div className="space-y-3">
+                      {currentQuestion?.type === "single_choice" ? (
+                        <RadioGroup>
+                          {currentQuestion?.answers?.map((option, index) => (
+                            <div key={index} className="flex items-center gap-2">
+                              <RadioGroupItem
+                                value={index.toString()}
+                                checked={option.is_correct}
+                                onClick={() => handleCorrectAnswerChange(index, true)}
+                              />
+                              <Input
+                                value={option.text}
+                                onChange={(e) => handleAnswerChange(index, e.target.value)}
+                                placeholder={`Вариант ${index + 1}`}
+                                className="w-full text-[#18191B] placeholder:text-[#71717A] [&>input]:text-[#18191B] selection:bg-[#0D0BCC] selection:text-white border-0 shadow-none"
+                              />
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => handleRemoveAnswer(index)}
+                                disabled={currentQuestion.answers.length <= 1}
+                                className="h-[18px] w-[18px] p-0 border-0 shadow-none"
+                              >
+                                <X className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          ))}
+                          <div className="flex items-center gap-2">
                             <RadioGroupItem
-                              value={index.toString()}
-                              checked={option.is_correct}
-                              onClick={() => handleCorrectAnswerChange(index, true)}
+                              value="add"
+                              className="opacity-0"
                             />
                             <Input
-                              value={option.text}
-                              onChange={(e) => handleAnswerChange(index, e.target.value)}
-                              placeholder={`Вариант ${index + 1}`}
+                              readOnly
+                              placeholder="Добавить вариант"
+                              className="w-full text-[#A2ACB0] border-0 shadow-none cursor-pointer"
+                              onClick={handleAddAnswer}
                             />
                             <Button
                               variant="ghost"
                               size="icon"
-                              onClick={() => handleRemoveAnswer(index)}
-                              disabled={currentQuestion.answers.length <= 1}
+                              className="invisible"
                             >
-                              ×
+                              <X className="h-4 w-4" />
                             </Button>
                           </div>
-                        ))}
-                      </RadioGroup>
-                    ) : (
-                      <>
-                        {currentQuestion?.answers?.map((option, index) => (
-                          <div key={index} className="flex items-center gap-2">
+                        </RadioGroup>
+                      ) : (
+                        <>
+                          {currentQuestion?.answers?.map((option, index) => (
+                            <div key={index} className="flex items-center gap-2">
+                              <Checkbox
+                                checked={option.is_correct}
+                                onCheckedChange={(checked) =>
+                                  handleCorrectAnswerChange(index, Boolean(checked))
+                                }
+                              />
+                              <Input
+                                value={option.text}
+                                onChange={(e) => handleAnswerChange(index, e.target.value)}
+                                placeholder={`Вариант ${index + 1}`}
+                                className="w-full text-[#18191B] placeholder:text-[#71717A] [&>input]:text-[#18191B] selection:bg-[#0D0BCC] selection:text-white border-0 shadow-none"
+                              />
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => handleRemoveAnswer(index)}
+                                disabled={currentQuestion.answers.length <= 1}
+                                className="h-[18px] w-[18px] p-0 border-0 shadow-none"
+                              >
+                                <X className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          ))}
+                          <div className="flex items-center gap-2">
                             <Checkbox
-                              checked={option.is_correct}
-                              onCheckedChange={(checked) =>
-                                handleCorrectAnswerChange(index, Boolean(checked))
-                              }
+                              className="opacity-0"
                             />
                             <Input
-                              value={option.text}
-                              onChange={(e) => handleAnswerChange(index, e.target.value)}
-                              placeholder={`Вариант ${index + 1}`}
+                              readOnly
+                              placeholder="Добавить вариант"
+                              className="w-full text-[#A2ACB0] placeholder:text-[#A2ACB0] [&>input]:text-[#A2ACB0] selection:bg-[#0D0BCC] selection:text-white"
+                              onClick={handleAddAnswer}
                             />
                             <Button
                               variant="ghost"
                               size="icon"
-                              onClick={() => handleRemoveAnswer(index)}
-                              disabled={currentQuestion.answers.length <= 1}
+                              className="invisible"
                             >
-                              ×
+                              <X className="h-4 w-4" />
                             </Button>
                           </div>
-                        ))}
-                      </>
-                    )}
+                        </>
+                      )}
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
+              </div>
+
+              <div className="transition-opacity duration-300">
+                {isSaving ? (
+                  <span className="flex items-center gap-2 text-[#707579] font-inter text-[14px]">
+                    <Loader2 className="h-4 w-4 animate-spin" />Изменения сохраняются
+                  </span>
+                ) : (
+                  <span className="flex items-center gap-2 text-[#77CD81] font-inter text-[14px]">
+                    <Check className="h-4 w-4" />Изменения сохранены {saveTime}
+                  </span>
+                )}
+              </div>
             </div>
 
-            {updateQuestionMutation.isLoading ?
-              <span className={"flex gap-2"}><Loader />Загрузка</span> : "Данные сохранены"}
-          </TabsContent>
-        </Tabs>
-      </div>
+            <div className="flex-1 p-6 rounded-lg">
+              {/* Здесь будет предпросмотр */}
+              <div className="relative w-[375px] bg-[#F5F5F5] rounded-lg shadow-md overflow-hidden">
+                <div className="absolute top-0 left-0 w-full h-10 bg-[#007AFF] flex items-center justify-center text-white font-medium">
+                  Telegram
+                </div>
+                <div className="mt-10 p-4">
+                  <div className="bg-white p-4 rounded-lg shadow-sm">
+                    {preview && (
+                      <img src={preview} alt="Uploaded Preview" className="w-full h-auto mb-4 rounded-md" />
+                    )}
+                    <h3 className="text-md font-bold text-[#09090B] mb-2">{currentQuestion?.title || "Ваш вопрос здесь"}</h3>
+                    <p className="text-sm text-[#09090B]">{currentQuestion?.description || "Описание вопроса будет отображаться здесь."}</p>
+                    <ul className="mt-4 space-y-2">
+                      {currentQuestion?.answers.map((answer, index) => (
+                        <li key={index} className="text-sm text-[#09090B]">
+                          {index + 1}. {answer.text}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };

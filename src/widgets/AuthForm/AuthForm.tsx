@@ -29,14 +29,14 @@ export default function AuthForm() {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-4">
-      <Card className="w-full max-w-md shadow-lg">
+    <div className="flex items-center justify-center min-h-screen bg-bgauth p-4">
+      <Card className="w-full max-w-md shadow-lg bg-white">
         <CardHeader className="space-y-2">
-          <CardTitle className="text-2xl font-bold text-center">
+          <CardTitle className="text-[24px] text-center font-manrope font-weight-700 text-[#18191B]">
             Вход в Telehoot
           </CardTitle>
 
-          <p className="text-center text-sm text-muted-foreground">
+          <p className="text-center text-[14px] font-manrope font-weight-400 text-[#707579]">
             Создать квиз и посмотреть статистику
           </p>
         </CardHeader>
