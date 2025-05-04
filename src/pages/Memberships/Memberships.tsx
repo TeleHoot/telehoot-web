@@ -23,7 +23,7 @@ const roleLabels: Record<role, string> = {
 
 // Вынесенные стили для табов
 const tabListStyles = "flex flex-col items-start h-auto bg-transparent shadow-none font-inter text-[16px] text-[#71717A] font-medium";
-const tabTriggerStyles = "w-full shadow-none justify-start data-[state=active]:border-l-[3px] data-[state=active]:border-l-[#0D0BCC] data-[state=active]:bg-transparent data-[state=active]:text-[#09090B] data-[state=active]:shadow-none rounded-none";
+const tabTriggerStyles = "w-full shadow-none justify-start data-[state=active]:border-l-[3px] data-[state=active]:border-l-[#0D0BCC] data-[state=active]:bg-transparent data-[state=active]:text-[#09090B] data-[state=active]:shadow-none rounded-none cursor-pointer";
 
 export default function UsersPage() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -146,7 +146,7 @@ export default function UsersPage() {
                   filteredMemberships?.map((member) => (
                     <div
                       key={`${member.user.id}-${member.role}`}
-                      className="flex items-center justify-between p-3 hover:bg-gray-50 rounded-lg"
+                      className="flex items-center justify-between rounded-lg"
                     >
                       <div className="flex items-center gap-4">
                         <Avatar className="h-16 w-16">
@@ -174,42 +174,42 @@ export default function UsersPage() {
                               size="sm"
                               onClick={() => handleApprove(member.id)}
                             >
-                              <Check className="h-4 w-4 mr-1" /> Принять
+                              <Check className="h-4 w-4 mr-1 cursor-pointer" /> Принять
                             </Button>
                             <Button
                               variant="outline"
                               size="sm"
                               onClick={() => handleReject(member.id)}
                             >
-                              <X className="h-4 w-4 mr-1" /> Отклонить
+                              <X className="h-4 w-4 mr-1 cursor-pointer" /> Отклонить
                             </Button>
                           </>
                         ) : (
-                          <DropdownMenu>
+                          <DropdownMenu className="cursor-pointer">
                             <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="sm">
-                                <MoreVertical className="h-4 w-4" />
+                              <Button variant="ghost" size="sm" className="cursor-pointer">
+                                <MoreVertical className="h-4 w-4 cursor-pointer" />
                               </Button>
                             </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
+                            <DropdownMenuContent align="end" className="bg-white">
                               <DropdownMenuItem
-                                onClick={() => handleChangeRole(member.id, "owner")}
+                                onClick={() => handleChangeRole(member.id, "owner")} className="cursor-pointer"
                               >
                                 Сделать администратором
                               </DropdownMenuItem>
                               <DropdownMenuItem
-                                onClick={() => handleChangeRole(member.id, "editor")}
+                                onClick={() => handleChangeRole(member.id, "editor")} className="cursor-pointer"
                               >
                                 Сделать редактором
                               </DropdownMenuItem>
                               <DropdownMenuItem
-                                onClick={() => handleChangeRole(member.id, "presenter")}
+                                onClick={() => handleChangeRole(member.id, "presenter")} className="cursor-pointer"
                               >
                                 Сделать ведущим
                               </DropdownMenuItem>
                               <DropdownMenuItem
                                 onClick={() => handleRemove(member.id)}
-                                className="text-red-600"
+                                className="cursor-pointer"
                               >
                                 Удалить из организации
                               </DropdownMenuItem>
