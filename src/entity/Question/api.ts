@@ -2,11 +2,11 @@ import { api } from "@shared/api";
 import { Question, QuestionCreate } from "./Question.types";
 
 export const getQuizQuestion = async (quizId: string) => {
-  return await api.get<Question[]>(`/quizzes/${quizId}/questions/`);
+  return await api.get<Question[]>(`/quizzes/${quizId}/questions`);
 };
 
 export const createQuestion = async (params: QuestionCreate) => {
-  const route = `/quizzes/${params.quiz_id}/questions/`;
+  const route = `/quizzes/${params.quiz_id}/questions`;
 
   delete params["quiz_id"];
 
