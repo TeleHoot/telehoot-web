@@ -3,12 +3,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@shared/components/ui/
 import { Alert, AlertDescription } from "@shared/components/ui/alert";
 import { TelegramLogin, type TelegramLoginData } from "@feature/TelegramLogin";
 import { useMutation, useQueryClient } from "react-query";
+import { useNavigate } from "react-router-dom";
 import { auth } from "@entity/User";
 
 export default function AuthForm() {
   const [error, setError] = useState<string | null>(null);
 
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
 
   const mutation = useMutation<void, Error, TelegramLoginData>(
     "auth",
@@ -16,6 +18,7 @@ export default function AuthForm() {
     {
       onSuccess: () => {
         queryClient.invalidateQueries("auth");
+        navigate("/");
       },
       onError: (error: Error) => {
         setError(error.message);

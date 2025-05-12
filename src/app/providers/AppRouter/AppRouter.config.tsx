@@ -20,6 +20,7 @@ import { About } from "@pages/About";
 import { Quizzes } from "@pages/Quizzes";
 import { CreateQuiz } from "@pages/CreateQuiz";
 import { Memberships } from "@pages/Memberships";
+import { Settings } from "@pages/Settings";
 import { Loader2 } from "lucide-react"; // Добавлен импорт лоадера
 
 const ToLazy = (LazyComponent: LazyExoticComponent<FC>): ReactNode => (
@@ -126,6 +127,9 @@ export const ROUTES: RouteObject[] = [
         }, {
           path: "memberships",
           element: ToLazy(Memberships),
+        }, {
+          path: "settings",
+          element: ToLazy(Settings),
         },
         ],
       }, {

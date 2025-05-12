@@ -22,6 +22,7 @@ const initialQuestion: QuestionCreate = {
   quiz_id: "",
   title: "Текст вопроса",
   type: "single_choice",
+  description: "",
   weight: 1,
   order: 1,
   answers: [{
@@ -204,7 +205,7 @@ const CreateQuiz = () => {
 
   const handleQuestionSelect = (question: Question) => {
     // Находим актуальную версию вопроса из массива questions
-    const actualQuestion = questions.find(q => q.id === question.id) || question;
+    const actualQuestion = question;
     setCurrentQuestion(actualQuestion);
     setPreview(actualQuestion.media_path || null);
     setFileName(actualQuestion.media_path ? "Изображение загружено" : "Файл не выбран");

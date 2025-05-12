@@ -4,7 +4,7 @@ import { User } from "@entity/User/User.types";
 
 
 export const auth = async (data: TelegramLoginData): Promise<void> => {
-  return await api.post('auth/login', data);
+  return await api.post('auth/login/widget', data);
 }
 
 export const getMe = async ()  => {
