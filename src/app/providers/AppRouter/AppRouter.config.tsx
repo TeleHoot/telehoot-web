@@ -20,9 +20,16 @@ import { About } from "@pages/About";
 import { Quizzes } from "@pages/Quizzes";
 import { CreateQuiz } from "@pages/CreateQuiz";
 import { Memberships } from "@pages/Memberships";
+import { Settings } from "@pages/Settings";
+import { Loader2 } from "lucide-react";
+import { StartQuiz } from "@pages/StartQuiz";
 
 const ToLazy = (LazyComponent: LazyExoticComponent<FC>): ReactNode => (
-  <Suspense fallback={""}>
+  <Suspense fallback={
+    <div className="flex items-center justify-center h-full">
+      <Loader2 className="h-8 w-8 animate-spin text-[#0D0BCC]" />
+    </div>
+  }>
     <LazyComponent />
   </Suspense>
 );
@@ -63,24 +70,29 @@ const OrgProvider: FC<PropsWithChildren> = props => {
   );
 };
 
-export const ProtectedRoute = (): ReactNode => {
+export const ProtectedRoute: FC<{ withHeader?: boolean }> = (props): ReactNode => {
+  const { withHeader = true } = props;
   const { isLoading, data } = useQuery({
     queryKey: ["auth"],
     queryFn: getMe,
   });
 
   if (isLoading) {
-    return <>Loading...</>;
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <Loader2 className="h-12 w-12 animate-spin text-[#0D0BCC]" />
+      </div>
+    );
   }
 
   if (!data?.data)
     return <Navigate to="/login" replace />;
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col bg-[#F1F1F1]">
       <AuthContext.Provider value={data.data}>
         <OrgProvider>
-          <Header />
+          {withHeader && <Header />}
           <main className="flex-1">
             <Outlet />
           </main>
@@ -117,6 +129,9 @@ export const ROUTES: RouteObject[] = [
         }, {
           path: "memberships",
           element: ToLazy(Memberships),
+        }, {
+          path: "settings",
+          element: ToLazy(Settings),
         },
         ],
       }, {
@@ -126,8 +141,17 @@ export const ROUTES: RouteObject[] = [
           path: ":id",
           element: ToLazy(CreateQuiz),
         }],
-      }],
+      },
+    ],
+  }, {
+    path: "/",
+    element: <ProtectedRoute withHeader={false}/>,
+    children: [{
+      path: "startQuiz/:id",
+      element: ToLazy(StartQuiz),
+    },],
   },
+
   {
     path: "/login",
     element: ToLazy(Auth),
