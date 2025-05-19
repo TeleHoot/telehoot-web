@@ -5,6 +5,11 @@ export const getOrganizationQuizzes = async (organizationId: string) => {
   return await api.get<Quiz[]>(`/organizations/${organizationId}/quizzes?limit=100`);
 };
 
+export const getQuiz = async (data: {organizationId?: string, quizId?: string}) => {
+  return await api.get<Quiz>(`/organizations/${data.organizationId}/quizzes/${data.quizId}`);
+};
+
+
 export const createQuiz = async (params: CreateQuiz) => {
   const route = `/organizations/${params.organization_id}/quizzes`
 

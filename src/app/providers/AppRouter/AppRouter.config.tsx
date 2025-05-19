@@ -21,7 +21,8 @@ import { Quizzes } from "@pages/Quizzes";
 import { CreateQuiz } from "@pages/CreateQuiz";
 import { Memberships } from "@pages/Memberships";
 import { Settings } from "@pages/Settings";
-import { Loader2 } from "lucide-react"; // Добавлен импорт лоадера
+import { Loader2 } from "lucide-react";
+import { StartQuiz } from "@pages/StartQuiz";
 
 const ToLazy = (LazyComponent: LazyExoticComponent<FC>): ReactNode => (
   <Suspense fallback={
@@ -69,7 +70,8 @@ const OrgProvider: FC<PropsWithChildren> = props => {
   );
 };
 
-export const ProtectedRoute = (): ReactNode => {
+export const ProtectedRoute: FC<{ withHeader?: boolean }> = (props): ReactNode => {
+  const { withHeader = true } = props;
   const { isLoading, data } = useQuery({
     queryKey: ["auth"],
     queryFn: getMe,
@@ -90,7 +92,7 @@ export const ProtectedRoute = (): ReactNode => {
     <div className="min-h-screen flex flex-col bg-[#F1F1F1]">
       <AuthContext.Provider value={data.data}>
         <OrgProvider>
-          <Header />
+          {withHeader && <Header />}
           <main className="flex-1">
             <Outlet />
           </main>
@@ -139,8 +141,17 @@ export const ROUTES: RouteObject[] = [
           path: ":id",
           element: ToLazy(CreateQuiz),
         }],
-      }],
+      },
+    ],
+  }, {
+    path: "/",
+    element: <ProtectedRoute withHeader={false}/>,
+    children: [{
+      path: "startQuiz/:id",
+      element: ToLazy(StartQuiz),
+    },],
   },
+
   {
     path: "/login",
     element: ToLazy(Auth),

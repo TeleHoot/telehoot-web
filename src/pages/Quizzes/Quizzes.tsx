@@ -8,14 +8,8 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@shared/components/ui/dropdown-menu";
-import { MoreVertical, Search, FileQuestion, ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
-import {
-  Pagination,
-  PaginationContent,
-  PaginationItem,
-  PaginationNext,
-  PaginationPrevious,
-} from "@shared/components/ui/pagination";
+import { ChevronLeft, ChevronRight, FileQuestion, Loader2, MoreVertical, Search } from "lucide-react";
+import { Pagination, PaginationContent, PaginationItem } from "@shared/components/ui/pagination";
 import { useQuery } from "react-query";
 import { getOrganizationQuizzes } from "@entity/Quiz";
 import { OrganizationContext } from "@app/providers/AppRouter/AppRouter.config";
@@ -63,7 +57,7 @@ const QuizzesPage = () => {
   };
 
   const handleRunQuiz = (quizId: string) => {
-    console.log("Запустить квиз:", quizId);
+    navigate(`/startQuiz/${quizId}`, { replace: true });
   };
 
   // Общие стили для кнопки создания
@@ -165,7 +159,7 @@ const QuizzesPage = () => {
                   <TableHead>Название</TableHead>
                   <TableHead>Вопросы</TableHead>
                   <TableHead>Автор</TableHead>
-                  <TableHead/>
+                  <TableHead />
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -219,7 +213,7 @@ const QuizzesPage = () => {
                     <button
                       onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
                       className={`font-inter flex items-center gap-1 font-medium text-[14px] mr-3 ${
-                        currentPage === 1 ? 'text-[#A2ACB0] cursor-not-allowed' : 'cursor-pointer'
+                        currentPage === 1 ? "text-[#A2ACB0] cursor-not-allowed" : "cursor-pointer"
                       }`}
                       disabled={currentPage === 1}
                     >
@@ -231,11 +225,11 @@ const QuizzesPage = () => {
                   <PaginationItem>
                     <Button
                       onClick={() => setCurrentPage(1)}
-                      variant={currentPage === 1 ? 'outline' : 'ghost'}
+                      variant={currentPage === 1 ? "outline" : "ghost"}
                       className={`font-inter cursor-pointer ${
                         currentPage === 1
-                          ? 'border-[#0D0BCC] bg-white'
-                          : 'hover:bg-transparent'
+                          ? "border-[#0D0BCC] bg-white"
+                          : "hover:bg-transparent"
                       }`}
                     >
                       1
@@ -262,11 +256,11 @@ const QuizzesPage = () => {
                         <PaginationItem key={index}>
                           <Button
                             onClick={() => setCurrentPage(pageNumber)}
-                            variant={currentPage === pageNumber ? 'outline' : 'ghost'}
+                            variant={currentPage === pageNumber ? "outline" : "ghost"}
                             className={`font-inter cursor-pointer ${
                               currentPage === pageNumber
-                                ? 'border-[#0D0BCC] bg-white'
-                                : 'hover:bg-transparent'
+                                ? "border-[#0D0BCC] bg-white"
+                                : "hover:bg-transparent"
                             }`}
                           >
                             {pageNumber}
@@ -289,11 +283,11 @@ const QuizzesPage = () => {
                     <PaginationItem>
                       <Button
                         onClick={() => setCurrentPage(totalPages)}
-                        variant={currentPage === totalPages ? 'outline' : 'ghost'}
+                        variant={currentPage === totalPages ? "outline" : "ghost"}
                         className={`font-inter cursor-pointer ${
                           currentPage === totalPages
-                            ? 'border-[#0D0BCC] bg-white'
-                            : 'hover:bg-transparent'
+                            ? "border-[#0D0BCC] bg-white"
+                            : "hover:bg-transparent"
                         }`}
                       >
                         {totalPages}
@@ -305,7 +299,7 @@ const QuizzesPage = () => {
                     <button
                       onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
                       className={`font-inter flex items-center gap-1 font-medium text-[14px] ml-3 ${
-                        currentPage === totalPages ? 'text-[#A2ACB0] cursor-not-allowed' : 'cursor-pointer'
+                        currentPage === totalPages ? "text-[#A2ACB0] cursor-not-allowed" : "cursor-pointer"
                       }`}
                       disabled={currentPage === totalPages}
                     >
