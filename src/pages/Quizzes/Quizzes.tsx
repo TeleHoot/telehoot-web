@@ -8,7 +8,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@shared/components/ui/dropdown-menu";
-import { ChevronLeft, ChevronRight, FileQuestion, Loader2, MoreVertical, Search } from "lucide-react";
+import { ChevronLeft, ChevronRight, FileQuestion, Loader2, MoreVertical, Search, Play, Pencil, Trash2 } from "lucide-react";
 import { Pagination, PaginationContent, PaginationItem } from "@shared/components/ui/pagination";
 import { useQuery } from "react-query";
 import { getOrganizationQuizzes } from "@entity/Quiz";
@@ -178,21 +178,30 @@ const QuizzesPage = () => {
                       <TableCell className="text-right">
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon">
+                            <Button variant="ghost" size="icon" className="cursor-pointer">
                               <MoreVertical className="h-4 w-4" />
                             </Button>
                           </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end" className="font-inter">
-                            <DropdownMenuItem onClick={() => handleRunQuiz(quiz.id)}>
+                          <DropdownMenuContent align="end" className="font-inter bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md shadow-lg">
+                            <DropdownMenuItem
+                              onClick={() => handleRunQuiz(quiz.id)}
+                              className="text-[#0D0BCC] focus:bg-blue-50 dark:focus:bg-blue-900/30 cursor-pointer"
+                            >
+                              <Play className="h-4 w-4 mr-2" />
                               Запустить
                             </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => handleEditQuiz(quiz.id)}>
+                            <DropdownMenuItem
+                              onClick={() => handleEditQuiz(quiz.id)}
+                              className="focus:bg-gray-100 cursor-pointer"
+                            >
+                              <Pencil className="h-4 w-4 mr-2" />
                               Редактировать
                             </DropdownMenuItem>
                             <DropdownMenuItem
                               onClick={() => handleDeleteQuiz(quiz.id)}
-                              className="text-red-600"
+                              className="text-red-600 dark:text-red-400 focus:bg-red-50 dark:focus:bg-red-900/30 cursor-pointer"
                             >
+                              <Trash2 className="h-4 w-4 mr-2" />
                               Удалить
                             </DropdownMenuItem>
                           </DropdownMenuContent>

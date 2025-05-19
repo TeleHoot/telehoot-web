@@ -1,5 +1,4 @@
 import { useNavigate, useParams } from "react-router-dom";
-
 import { Dispatch, FC, SetStateAction, useContext, useEffect, useRef, useState } from "react";
 import { useMutation, useQuery } from "react-query";
 import { QRCodeSVG } from "qrcode.react";
@@ -68,7 +67,7 @@ export const useQuizSession = () => {
   });
 
   const { mutate: createSessionMutate, data: sessionData } = useMutation(createSession);
-  const { mutate: createHost, data: hostData } = useMutation(createParticipant);
+  const { mutate: createHost } = useMutation(createParticipant);
 
   const { data, setMessageHandlers, send } = useWebSocket(WebSocketUrl, sessionData?.data?.id);
 
@@ -107,57 +106,43 @@ export const useQuizSession = () => {
     session: sessionData?.data,
     createSessionMutate,
     createHost,
-    hostData,
   };
 };
 
 interface QuizSessionViewProps {
   sessionCode?: string;
-  participants: Array<{
-    id: string
-    name: string
-    score: number
-  }>;
 }
 
-export function QuizSessionView({ sessionCode, participants }: QuizSessionViewProps) {
-  const joinUrl = `${window.location.origin}/join/${sessionCode}`;
-
+export function QuizSessionView({ sessionCode }: QuizSessionViewProps) {
   return (
-    <div className="bg-white rounded-lg shadow p-6">
-      <h2 className="text-xl font-semibold mb-4">Подключение участников</h2>
-
-      <div className="flex items-center gap-6">
-        <div className="border rounded p-4">
-          <QRCodeSVG
-            value={joinUrl}
-            size={180}
-            level="H"
-          />
+    <div className="bg-white rounded-2xl p-6 h-[255px]" style={{ boxShadow: "0px -1px 31.5px -7px #1D1D1D40" }}>
+      <div className="grid grid-cols-2 h-full">
+        <div className="flex flex-col pr-6 items-center justify-center">
+          <h2 className="text-xl font-semibold mb-4 font-manrope">Отсканируй QR</h2>
+          <div className="flex-1 flex items-center justify-center">
+            <div className="p-2 rounded-lg" style={{ border: "2px solid #0D0BCC" }}>
+              <QRCodeSVG
+                value={sessionCode || ""}
+                size={140}
+                level="H"
+              />
+            </div>
+          </div>
         </div>
 
-        <div>
-          <p className="text-sm text-gray-600 mb-2">Код сессии:</p>
-          <div className="flex items-center gap-2">
-            <span className="text-3xl font-bold">{sessionCode}</span>
-            <Button>{joinUrl}</Button>
-          </div>
-
-          <p className="text-sm text-gray-600 mt-4 mb-2">Ссылка для подключения:</p>
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-mono bg-gray-100 px-2 py-1 rounded truncate max-w-xs">
-              {joinUrl}
+        <div
+          className="flex flex-col pl-6 border-l items-center justify-center"
+          style={{ borderLeftWidth: "3px", borderColor: "#E3E3E3" }}
+        >
+          <h2 className="text-xl font-semibold mb-4 font-manrope">Войди по коду</h2>
+          <div className="flex-1 flex items-center justify-center">
+            <span
+              className="text-6xl font-bold font-manrope"
+              style={{ color: "#0D0BCC" }}
+            >
+              {sessionCode}
             </span>
-            <Button>{joinUrl}</Button>
           </div>
-        </div>
-      </div>
-
-      <div className="mt-6">
-        <h3 className="font-medium mb-2">Статус подключения</h3>
-        <div className="flex items-center gap-2">
-          <span className="h-2 w-2 rounded-full bg-green-500"></span>
-          <span>Ожидание участников ({participants.length} подключено)</span>
         </div>
       </div>
     </div>
@@ -177,27 +162,38 @@ interface QuizParticipantsListProps {
 }
 
 export function QuizParticipantsList({ participants }: QuizParticipantsListProps) {
-  return (
-    <div className="bg-white rounded-lg shadow p-6 h-full">
-      <h2 className="text-xl font-semibold mb-4">Участники</h2>
+  const filteredParticipants = participants.filter(p => p.role !== "host");
 
-      <ScrollArea className="h-[calc(100%-2rem)]">
-        <div className="space-y-2">
-          {participants.map(participant => (
-            <div key={participant?.user_id} className="flex justify-between items-center p-2 hover:bg-gray-50 rounded">
-              <Avatar className="h-16 w-16">
-                <AvatarImage
-                  src={participant?.photo_url}
-                  alt={participant?.username}
-                />
-                <AvatarFallback className="text-4xl w-full h-full flex items-center justify-center">
-                  {participant?.username}
-                </AvatarFallback>
-              </Avatar>
-              <span>{participant?.username}</span>
-            </div>
-          ))}
-        </div>
+  return (
+    <div className="bg-white rounded-2xl p-6 h-[255px]" style={{ boxShadow: "0px -1px 31.5px -7px #1D1D1D40" }}>
+      <h2 className="text-xl font-semibold mb-4 font-manrope text-center">Игроки ({filteredParticipants.length})</h2>
+
+      <ScrollArea className="h-[180px]">
+        {filteredParticipants.length === 0 ? (
+          <div
+            className="flex items-center justify-center h-full font-manrope h-full"
+            style={{ color: "#000000" }}
+          >
+            <span>Ожидаем участников...</span>
+          </div>
+        ) : (
+          <div className="grid grid-cols-4 gap-4">
+            {filteredParticipants.map(participant => (
+              <div key={participant?.user_id} className="flex flex-col items-center p-2 hover:bg-gray-50 rounded-lg">
+                <Avatar className="h-16 w-16 mb-2">
+                  <AvatarImage
+                    src={participant?.photo_url}
+                    alt={participant?.username}
+                  />
+                  <AvatarFallback className="text-2xl w-full h-full flex items-center justify-center font-inter">
+                    {participant?.username.charAt(0).toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
+                <span className="font-inter text-sm text-center">{participant?.username}</span>
+              </div>
+            ))}
+          </div>
+        )}
       </ScrollArea>
     </div>
   );
@@ -207,20 +203,42 @@ interface QuizSessionControlsProps {
   onStart: () => void;
   onEnd: () => void;
   sessionStatus: SessionStatus;
+  hasParticipants: boolean;
 }
-
-export function QuizSessionControls({ onStart, onEnd, sessionStatus }: QuizSessionControlsProps) {
+// disabled={sessionStatus !== "waiting" || !hasParticipants}
+export function QuizSessionControls({ onStart, onEnd, sessionStatus, hasParticipants }: QuizSessionControlsProps) {
   return (
-    <div className="flex justify-between mt-6">
-      <Button variant="outline" onClick={onEnd}>
-        Завершить сессию
-      </Button>
-
-      <Button
+    <div className="flex flex-col justify-center items-center gap-6 mt-6 pt-10">
+    <Button
         onClick={onStart}
-        disabled={sessionStatus !== "waiting"}
+        className="font-inter hover:bg-blue-300 transition-colors disabled:bg-[#A2ACB0] cursor-pointer"
+        style={{
+          width: "456px",
+          height: "69px",
+          borderRadius: "10px",
+          padding: "15px 12px",
+          backgroundColor: "#0D0BCC",
+          fontSize: "32px",
+          color: "#FFFFFF",
+        }}
       >
-        Начать квиз
+        Старт
+      </Button>
+      <Button
+        variant="ghost"
+        onClick={onEnd}
+        className="font-inter hover:bg-gray-100 transition-colors cursor-pointer"
+        style={{
+          width: "456px",
+          height: "50px",
+          minWidth: "50px",
+          borderRadius: "10px",
+          padding: "15px 12px",
+          fontSize: "17px",
+          color: "#303030",
+        }}
+      >
+        Назад
       </Button>
     </div>
   );
@@ -233,7 +251,18 @@ interface QuizSessionHeaderProps {
 export function QuizSessionHeader({ title }: QuizSessionHeaderProps) {
   return (
     <header className="text-center">
-      <h1 className="text-4xl font-bold tracking-tight">{title}</h1>
+      <h1
+        className="font-manrope font-bold"
+        style={{
+          color: "#0D0BCC",
+          fontSize: "96px",
+          fontWeight: 700,
+          paddingTop: "105px",
+          paddingBottom: "140px"
+        }}
+      >
+        {title}
+      </h1>
     </header>
   );
 }
@@ -263,8 +292,8 @@ const Counter: FC<{ next: Dispatch<SetStateAction<Stages>> }> = props => {
   }, [count]);
 
   return (
-    <div className="flex h-screen w-full items-center justify-center bg-background">
-      <div className="text-9xl font-bold text-foreground">{count}</div>
+    <div className="flex h-screen w-full items-center justify-center bg-white">
+      <div className="text-9xl font-bold font-manrope" style={{ color: "#0D0BCC" }}>{count}</div>
     </div>
   );
 };
@@ -278,8 +307,6 @@ interface QuizPageProps {
 export function QuizPage({ question, onNext, onFinish }: QuizPageProps) {
   const [showAnswers, setShowAnswers] = useState(false);
 
-  console.log(question);
-
   const handleShowAnswers = () => {
     setShowAnswers(true);
   };
@@ -291,70 +318,90 @@ export function QuizPage({ question, onNext, onFinish }: QuizPageProps) {
 
   if (!question) return <></>;
 
-  return (
-    <div className="max-w-3xl mx-auto p-4">
-      <Card className="mb-6">
-        <CardHeader>
-          <CardTitle className="text-3xl font-bold text-center mb-4">
-            {question.title}
-          </CardTitle>
-          {question.description && (
-            <CardDescription className="text-lg text-center">
-              {question.description}
-            </CardDescription>
-          )}
-        </CardHeader>
-      </Card>
+  // Determine answer layout based on number of answers
+  const answerColumns = question.answers.length <= 2 ? 1 : 2;
+  const isOddNumber = question.answers.length % 2 !== 0;
 
-      {question.media_path && (
-        <div className="mb-8 flex justify-center">
-          <Avatar>
-            <AvatarImage
+  return (
+      <div className={`mx-auto p-6 bg-white min-h-screen flex-1 flex flex-col ${question.media_path ? '' : 'justify-between'}`}>
+        {/* Question Section */}
+        <div className={`mb-12 text-center ${question.media_path ? '' : 'mt-auto'}`}>
+          <h1 className="text-[64px] font-bold mb-8 font-manrope" style={{ color: '#0D0BCC', lineHeight: '70px' }}>
+            {question.title}
+          </h1>
+          {question.description && (
+            <p className="text-2xl font-manrope">
+              {question.description}
+            </p>
+          )}
+        </div>
+
+        {/* Media (if exists) */}
+        {question.media_path && (
+          <div className="mb-12 flex justify-center">
+            <img
               src={question.media_path}
               alt="Question media"
               className="max-h-96 rounded-lg object-contain"
             />
-          </Avatar>
-        </div>
-      )}
+          </div>
+        )}
 
-      <div className="grid gap-4 mb-8">
-        {question.answers
-          .sort((a, b) => a.order - b.order)
-          .map(answer => (
-            <div
-              key={answer.text}
-              className={`p-4 border rounded-lg text-lg ${
-                showAnswers && answer.is_correct
-                  ? "bg-green-100 border-green-500"
-                  : "bg-background"
-              }`}
+        {/* Bottom section with answers and buttons */}
+        <div className="mt-auto">
+          {/* Answers Grid */}
+          <div className={`grid ${answerColumns === 1 ? 'grid-cols-1' : 'grid-cols-2'} gap-6 mb-12`}>
+            {question.answers
+              .sort((a, b) => a.order - b.order)
+              .map((answer, index) => (
+                <div
+                  key={answer.text}
+                  className={`relative flex items-center p-[25px_40px] rounded-lg shadow-[0px_2px_17.9px_1px_rgba(66,66,66,0.2)] ${
+                    isOddNumber && index === question.answers.length - 1 ? 'col-span-2 mx-auto w-3/4' : 'w-full'
+                  } ${
+                    showAnswers && answer.is_correct
+                      ? 'bg-green-100 border-2 border-green-500'
+                      : 'bg-white'
+                  }`}
+                  style={{ height: '96px' }}
+                >
+                  {/* Answer number indicator */}
+                  <div
+                    className="absolute left-8 flex items-center justify-center rounded-lg bg-[#0D0BCC] text-white font-manrope text-[32px] font-bold"
+                    style={{ width: '44px', height: '44px' }}
+                  >
+                    {index + 1}
+                  </div>
+
+                  {/* Answer text */}
+                  <p className="text-[40px] font-manrope ml-15 font-medium">
+                    {answer.text}
+                  </p>
+                </div>
+              ))}
+          </div>
+
+          {/* Controls */}
+          <div className="flex justify-center gap-8">
+            <Button
+              size="lg"
+              className="w-[292px] h-[50px] font-inter font-semibold text-[20px] text-[#0D0BCC] hover:bg-white cursor-pointer border-1 border-solid border-[#0D0BCC]"
+              onClick={handleShowAnswers}
+              disabled={showAnswers}
             >
-              {answer.text}
-            </div>
-          ))}
-      </div>
+              Показать ответ
+            </Button>
 
-      <div className="flex justify-center gap-4">
-        <Button
-          size="lg"
-          className="px-8 py-4 text-lg"
-          onClick={handleShowAnswers}
-          disabled={showAnswers}
-        >
-          Показать ответ
-        </Button>
-
-        <Button
-          size="lg"
-          className="px-8 py-4 text-lg"
-          onClick={question.isLast ? onFinish : onNext}
-          variant="outline"
-        >
-          {question.isLast ? "Завершить квиз" : "Далее"}
-        </Button>
+            <Button
+              size="lg"
+              className="w-[292px] h-[50px] font-inter font-semibold text-[20px] text-[#FFFFFF] bg-[#0D0BCC] cursor-pointer hover:bg-[#0D0BCC]"
+              onClick={question.isLast ? onFinish : handleNext}
+            >
+              {question.isLast ? "Завершить" : "Следующий вопрос"}
+            </Button>
+          </div>
+        </div>
       </div>
-    </div>
   );
 }
 
@@ -366,7 +413,6 @@ function StartQuiz() {
     isLoading,
     error,
     session,
-    createHost,
     createSessionMutate,
     setMessageHandlers,
     startQuiz,
@@ -388,7 +434,7 @@ function StartQuiz() {
       organizationId: currentOrganizationId as string,
       quizId: quizId as string,
     });
-  }, [createSessionMutate, createSessionMutate]);
+  }, [createSessionMutate, currentOrganizationId, quizId]);
 
   useEffect(() => {
     setMessageHandlers(prev => ({
@@ -401,7 +447,7 @@ function StartQuiz() {
 
         setParticipants(prev => prev.filter(el => el.participant_id !== (data as any).participant_id));
       },
-      "cancel": (data) => {
+      "cancel": () => {
         navigate("/", { replace: true });
       },
       "start": (data) => {
@@ -410,53 +456,44 @@ function StartQuiz() {
           setCurrentQuestion({ ...(data as any)?.question, isLast: (data as any).is_last_question });
       },
       "next": (data) => {
-        console.log(data);
         if ((data as any)?.question)
           setCurrentQuestion({ ...(data as any)?.question, isLast: (data as any).is_last_question });
       },
       "finish": (data) => {
-        console.log(data);
         setStage("results");
       },
     }));
-  }, [setMessageHandlers]);
+  }, [setMessageHandlers, navigate]);
 
-  useEffect(() => {
-    if (!session) return;
-
-    createHost({
-      organizationId: currentOrganizationId as string,
-      quizId: quizId as string,
-      sessionId: session?.id as string,
-      session_nickname: "host",
-      role: "host",
-    });
-  }, [createHost, session]);
+  const handleEndQuiz = () => {
+    try {
+      endQuiz();
+    } catch (e) {
+      console.log("WebSocket might be closed, but we're navigating anyway");
+    }
+    navigate("/", { replace: true });
+  };
 
   const { join_code } = session || {};
+  const hasParticipants = participants.some(p => p.role === "participant" || p.role === "guest");
 
   if (stage === "start") return (
-    <div className="flex flex-col min-h-screen p-6 max-w-6xl mx-auto">
-      <QuizSessionHeader title={quiz?.name} />
+    <div className="bg-white">
+      <div className="min-h-screen max-w-6xl mx-auto bg-white">
+        <QuizSessionHeader title={quiz?.name} />
 
-      <div className="flex flex-1 gap-6 mt-8">
-        <div className="flex-1">
-          <QuizSessionView
-            sessionCode={join_code}
-            participants={[]}
-          />
-        </div>
-
-        <div className="w-80">
+        <div className="grid grid-cols-2 gap-6 px-6">
+          <QuizSessionView sessionCode={join_code} />
           <QuizParticipantsList participants={participants} />
         </div>
-      </div>
 
-      <QuizSessionControls
-        onStart={startQuiz}
-        onEnd={endQuiz}
-        sessionStatus={session?.status || "waiting"}
-      />
+        <QuizSessionControls
+          onStart={startQuiz}
+          onEnd={handleEndQuiz}
+          sessionStatus={session?.status || "waiting"}
+          hasParticipants={hasParticipants}
+        />
+      </div>
     </div>
   );
 
@@ -469,11 +506,10 @@ function StartQuiz() {
   );
 
   if (stage === "results") return (
-    <>
+    <div className="min-h-screen max-w-6xl mx-auto bg-white">
       результаты
-    </>
+    </div>
   );
 }
-
 
 export default StartQuiz;
