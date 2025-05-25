@@ -19,7 +19,7 @@ export default ({ mode }) => {
     },
     server: {
       allowedHosts: [
-        "front.frp.vstrechya.space",
+        "front.frp.deti-durova.ru",
       ],
     },
     plugins: [

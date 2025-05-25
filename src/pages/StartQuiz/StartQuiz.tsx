@@ -7,10 +7,10 @@ import { ScrollArea } from "@shared/components/ui/scroll-area";
 import { getQuiz } from "@entity/Quiz";
 import { OrganizationContext } from "@app/providers/AppRouter/AppRouter.config";
 import { createSession, SessionStatus } from "@entity/Session";
-import { createParticipant, ParticipantRole } from "@entity/Participant";
+import { Participant, ParticipantRole } from "@entity/Participant";
 import { Avatar, AvatarFallback, AvatarImage } from "@shared/components/ui/avatar";
 import { Question } from "@entity/Question";
-import { Card, CardDescription, CardHeader, CardTitle } from "@shared/components/ui/card";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@shared/components/ui/table";
 
 const WebSocketUrl = import.meta.env.VITE_API;
 
@@ -67,7 +67,7 @@ export const useQuizSession = () => {
   });
 
   const { mutate: createSessionMutate, data: sessionData } = useMutation(createSession);
-  const { mutate: createHost } = useMutation(createParticipant);
+  //const { mutate: createHost } = useMutation(createParticipant);
 
   const { data, setMessageHandlers, send } = useWebSocket(WebSocketUrl, sessionData?.data?.id);
 
@@ -105,7 +105,6 @@ export const useQuizSession = () => {
     error,
     session: sessionData?.data,
     createSessionMutate,
-    createHost,
   };
 };
 
@@ -205,11 +204,12 @@ interface QuizSessionControlsProps {
   sessionStatus: SessionStatus;
   hasParticipants: boolean;
 }
+
 // disabled={sessionStatus !== "waiting" || !hasParticipants}
 export function QuizSessionControls({ onStart, onEnd, sessionStatus, hasParticipants }: QuizSessionControlsProps) {
   return (
     <div className="flex flex-col justify-center items-center gap-6 mt-6 pt-10">
-    <Button
+      <Button
         onClick={onStart}
         className="font-inter hover:bg-blue-300 transition-colors disabled:bg-[#A2ACB0] cursor-pointer"
         style={{
@@ -258,7 +258,7 @@ export function QuizSessionHeader({ title }: QuizSessionHeaderProps) {
           fontSize: "96px",
           fontWeight: 700,
           paddingTop: "105px",
-          paddingBottom: "140px"
+          paddingBottom: "140px",
         }}
       >
         {title}
@@ -323,85 +323,236 @@ export function QuizPage({ question, onNext, onFinish }: QuizPageProps) {
   const isOddNumber = question.answers.length % 2 !== 0;
 
   return (
-      <div className={`mx-auto p-6 bg-white min-h-screen flex-1 flex flex-col ${question.media_path ? '' : 'justify-between'}`}>
-        {/* Question Section */}
-        <div className={`mb-12 text-center ${question.media_path ? '' : 'mt-auto'}`}>
-          <h1 className="text-[64px] font-bold mb-8 font-manrope" style={{ color: '#0D0BCC', lineHeight: '70px' }}>
-            {question.title}
-          </h1>
-          {question.description && (
-            <p className="text-2xl font-manrope">
-              {question.description}
-            </p>
-          )}
+    <div
+      className={`mx-auto p-6 bg-white min-h-screen flex-1 flex flex-col ${question.media_path ? "" : "justify-between"}`}>
+      {/* Question Section */}
+      <div className={`mb-12 text-center ${question.media_path ? "" : "mt-auto"}`}>
+        <h1 className="text-[64px] font-bold mb-8 font-manrope" style={{ color: "#0D0BCC", lineHeight: "70px" }}>
+          {question.title}
+        </h1>
+        {question.description && (
+          <p className="text-2xl font-manrope">
+            {question.description}
+          </p>
+        )}
+      </div>
+
+      {/* Media (if exists) */}
+      {question.media_path && (
+        <div className="mb-12 flex justify-center">
+          <img
+            src={question.media_path}
+            alt="Question media"
+            className="max-h-96 rounded-lg object-contain"
+          />
+        </div>
+      )}
+
+      {/* Bottom section with answers and buttons */}
+      <div className="mt-auto">
+        {/* Answers Grid */}
+        <div className={`grid ${answerColumns === 1 ? "grid-cols-1" : "grid-cols-2"} gap-6 mb-12`}>
+          {question.answers
+            .sort((a, b) => a.order - b.order)
+            .map((answer, index) => (
+              <div
+                key={answer.text}
+                className={`relative flex items-center p-[25px_40px] rounded-lg shadow-[0px_2px_17.9px_1px_rgba(66,66,66,0.2)] ${
+                  isOddNumber && index === question.answers.length - 1 ? "col-span-2 mx-auto w-3/4" : "w-full"
+                } ${
+                  showAnswers && answer.is_correct
+                    ? "bg-green-100 border-2 border-green-500"
+                    : "bg-white"
+                }`}
+                style={{ height: "96px" }}
+              >
+                {/* Answer number indicator */}
+                <div
+                  className="absolute left-8 flex items-center justify-center rounded-lg bg-[#0D0BCC] text-white font-manrope text-[32px] font-bold"
+                  style={{ width: "44px", height: "44px" }}
+                >
+                  {index + 1}
+                </div>
+
+                {/* Answer text */}
+                <p className="text-[40px] font-manrope ml-15 font-medium">
+                  {answer.text}
+                </p>
+              </div>
+            ))}
         </div>
 
-        {/* Media (if exists) */}
-        {question.media_path && (
-          <div className="mb-12 flex justify-center">
-            <img
-              src={question.media_path}
-              alt="Question media"
-              className="max-h-96 rounded-lg object-contain"
-            />
+        {/* Controls */}
+        <div className="flex justify-center gap-8">
+          <Button
+            size="lg"
+            className="w-[292px] h-[50px] font-inter font-semibold text-[20px] text-[#0D0BCC] hover:bg-white cursor-pointer border-1 border-solid border-[#0D0BCC]"
+            onClick={handleShowAnswers}
+            disabled={showAnswers}
+          >
+            Показать ответ
+          </Button>
+
+          <Button
+            size="lg"
+            className="w-[292px] h-[50px] font-inter font-semibold text-[20px] text-[#FFFFFF] bg-[#0D0BCC] cursor-pointer hover:bg-[#0D0BCC]"
+            onClick={question.isLast ? onFinish : handleNext}
+          >
+            {question.isLast ? "Завершить" : "Следующий вопрос"}
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+type Results = Array<{ participant: Participant, total_points: number }>
+
+interface QuizResultsProps {
+  results: Results;
+  quizTitle: string;
+  onNext: () => void;
+}
+
+export function QuizResults({ results, quizTitle, onNext }: QuizResultsProps) {
+  const [showNextButton, setShowNextButton] = useState(false);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setShowNextButton(true);
+    }, 3000);
+
+    return () => clearTimeout(timer);
+  }, []);
+
+  const filteredResults = results.filter(result => result.participant.role !== "host");
+
+  const winners = filteredResults.slice(0, 3);
+  const [firstPlace, secondPlace, thirdPlace] = winners;
+
+  return (
+    <div className="flex flex-col items-center min-h-screen p-6 bg-gray-50">
+      <h1 className="text-3xl font-bold mb-8 text-center">{quizTitle}</h1>
+
+      <div className="flex justify-center items-end gap-8 mb-12">
+        {/* 2 место */}
+        {secondPlace && (
+          <div className="flex flex-col items-center">
+            <div
+              className="bg-silver-500 h-48 w-40 rounded-t-lg flex flex-col items-center justify-end p-4 bg-gray-300">
+              <Avatar className="w-20 h-20 mb-2">
+                <AvatarImage src={secondPlace.participant.user.photo_url} />
+              </Avatar>
+              <span className="font-semibold">
+                {secondPlace.participant.user.username}
+              </span>
+              <span className="text-sm text-gray-600">
+                {secondPlace.total_points} pts
+              </span>
+            </div>
+            <div className="bg-gray-400 text-white px-4 py-2 rounded-b-lg w-full text-center">
+              2nd Place
+            </div>
           </div>
         )}
 
-        {/* Bottom section with answers and buttons */}
-        <div className="mt-auto">
-          {/* Answers Grid */}
-          <div className={`grid ${answerColumns === 1 ? 'grid-cols-1' : 'grid-cols-2'} gap-6 mb-12`}>
-            {question.answers
-              .sort((a, b) => a.order - b.order)
-              .map((answer, index) => (
-                <div
-                  key={answer.text}
-                  className={`relative flex items-center p-[25px_40px] rounded-lg shadow-[0px_2px_17.9px_1px_rgba(66,66,66,0.2)] ${
-                    isOddNumber && index === question.answers.length - 1 ? 'col-span-2 mx-auto w-3/4' : 'w-full'
-                  } ${
-                    showAnswers && answer.is_correct
-                      ? 'bg-green-100 border-2 border-green-500'
-                      : 'bg-white'
-                  }`}
-                  style={{ height: '96px' }}
-                >
-                  {/* Answer number indicator */}
-                  <div
-                    className="absolute left-8 flex items-center justify-center rounded-lg bg-[#0D0BCC] text-white font-manrope text-[32px] font-bold"
-                    style={{ width: '44px', height: '44px' }}
-                  >
-                    {index + 1}
-                  </div>
-
-                  {/* Answer text */}
-                  <p className="text-[40px] font-manrope ml-15 font-medium">
-                    {answer.text}
-                  </p>
-                </div>
-              ))}
+        {/* 1 место */}
+        {firstPlace && (
+          <div className="flex flex-col items-center">
+            <div
+              className="bg-gold-500 h-64 w-48 rounded-t-lg flex flex-col items-center justify-end p-4 bg-yellow-400">
+              <Avatar className="w-24 h-24 mb-2">
+                <AvatarImage src={firstPlace.participant.user.photo_url} />
+              </Avatar>
+              <span className="font-semibold">
+                {firstPlace.participant.user.username}
+              </span>
+              <span className="text-sm text-gray-600">
+                {firstPlace.total_points} pts
+              </span>
+            </div>
+            <div className="bg-yellow-600 text-white px-4 py-2 rounded-b-lg w-full text-center">
+              1st Place
+            </div>
           </div>
+        )}
 
-          {/* Controls */}
-          <div className="flex justify-center gap-8">
-            <Button
-              size="lg"
-              className="w-[292px] h-[50px] font-inter font-semibold text-[20px] text-[#0D0BCC] hover:bg-white cursor-pointer border-1 border-solid border-[#0D0BCC]"
-              onClick={handleShowAnswers}
-              disabled={showAnswers}
-            >
-              Показать ответ
-            </Button>
-
-            <Button
-              size="lg"
-              className="w-[292px] h-[50px] font-inter font-semibold text-[20px] text-[#FFFFFF] bg-[#0D0BCC] cursor-pointer hover:bg-[#0D0BCC]"
-              onClick={question.isLast ? onFinish : handleNext}
-            >
-              {question.isLast ? "Завершить" : "Следующий вопрос"}
-            </Button>
+        {/* 3 место */}
+        {thirdPlace && (
+          <div className="flex flex-col items-center">
+            <div
+              className="bg-bronze-500 h-40 w-36 rounded-t-lg flex flex-col items-center justify-end p-4 bg-amber-700">
+              <Avatar className="w-16 h-16 mb-2">
+                <AvatarImage src={thirdPlace.participant.user.photo_url} />
+              </Avatar>
+              <span className="font-semibold text-white">
+                {thirdPlace.participant.user.username}
+              </span>
+              <span className="text-sm text-gray-200">
+                {thirdPlace.total_points} pts
+              </span>
+            </div>
+            <div className="bg-amber-800 text-white px-4 py-2 rounded-b-lg w-full text-center">
+              3rd Place
+            </div>
           </div>
-        </div>
+        )}
       </div>
+
+      {showNextButton && (
+        <Button onClick={onNext} className="mt-4">
+          Далее
+        </Button>
+      )}
+    </div>
+  );
+}
+
+interface AllParticipantsProps {
+  results: Results;
+  quizTitle: string;
+}
+
+export function AllParticipants({ results, quizTitle }: AllParticipantsProps) {
+  // Сортируем участников по очкам
+  const sortedResults = [...results].sort(
+    (a, b) => b.total_points - a.total_points,
+  );
+
+  return (
+    <div className="flex flex-col items-center min-h-screen p-6 bg-gray-50">
+      <h1 className="text-3xl font-bold mb-8 text-center">
+        {quizTitle} - Все участники
+      </h1>
+
+      <div className="w-full max-w-2xl">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Место</TableHead>
+              <TableHead>Участник</TableHead>
+              <TableHead>Очки</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {sortedResults.map((result, index) => (
+              <TableRow key={index}>
+                <TableCell>{index + 1}</TableCell>
+                <TableCell>
+                  <div className="flex items-center gap-2">
+                    <Avatar className="w-8 h-8">
+                      <AvatarImage src={result.participant.user.photo_url} />
+                    </Avatar>
+                    <span>{result.participant.user.username}</span>
+                  </div>
+                </TableCell>
+                <TableCell>{result.total_points}</TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+    </div>
   );
 }
 
@@ -427,6 +578,8 @@ function StartQuiz() {
   const navigate = useNavigate();
   const [stage, setStage] = useState<Stages>("start");
   const [currentQuestion, setCurrentQuestion] = useState<Question & { isLast: boolean }>();
+  const [results, setResults] = useState<Results | null>(null);
+  const [showAllParticipants, setShowAllParticipants] = useState(false);
   const { id: quizId } = useParams();
 
   useEffect(() => {
@@ -460,6 +613,7 @@ function StartQuiz() {
           setCurrentQuestion({ ...(data as any)?.question, isLast: (data as any).is_last_question });
       },
       "finish": (data) => {
+        setResults(data.results as Results);
         setStage("results");
       },
     }));
@@ -505,10 +659,21 @@ function StartQuiz() {
     <QuizPage question={currentQuestion} onNext={nextQuestion} onFinish={finishQuiz} />
   );
 
-  if (stage === "results") return (
-    <div className="min-h-screen max-w-6xl mx-auto bg-white">
-      результаты
-    </div>
+  if (stage === "results" && results && quiz) return (
+    <>
+      {!showAllParticipants ? (
+        <QuizResults
+          results={results}
+          quizTitle={quiz?.name}
+          onNext={() => setShowAllParticipants(true)}
+        />
+      ) : (
+        <AllParticipants
+          results={results}
+          quizTitle={quiz?.name}
+        />
+      )}
+    </>
   );
 }
 
