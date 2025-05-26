@@ -660,29 +660,107 @@ const CreateQuiz = () => {
             </div>
 
             <div className="flex-1 p-6 rounded-lg">
-              {/* Здесь будет предпросмотр */}
-              <div className="relative w-[375px] bg-[#F5F5F5] rounded-lg shadow-md overflow-hidden">
-                <div className="absolute top-0 left-0 w-full h-10 bg-[#007AFF] flex items-center justify-center text-white font-medium">
-                  Telegram
-                </div>
-                <div className="mt-10 p-4">
-                  <div className="bg-white p-4 rounded-lg shadow-sm">
-                    {preview && (
-                      <img src={preview} alt="Uploaded Preview" className="w-full h-auto mb-4 rounded-md" />
-                    )}
-                    <h3 className="text-md font-bold text-[#09090B] mb-2">{currentQuestion?.title || "Ваш вопрос здесь"}</h3>
-                    <p className="text-sm text-[#09090B]">{currentQuestion?.description || "Описание вопроса будет отображаться здесь."}</p>
-                    <ul className="mt-4 space-y-2">
-                      {currentQuestion?.answers.map((answer, index) => (
-                        <li key={index} className="text-sm text-[#09090B]">
-                          {index + 1}. {answer.text}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                </div>
-              </div>
+  {/* Preview section with Telegram mockup */}
+  <div className="relative w-[319px] h-[600px]">
+    {/* Background image - Telegram mockup */}
+    <img
+      src="/preview.png"
+      alt="Telegram mockup"
+      className="absolute inset-0 w-full h-full object-contain"
+    />
+
+    {/* Question content overlay - adjusted position */}
+    <div
+      className="absolute top-[125px] left-[38px] w-[243px] h-[500px] overflow-y-auto px-4"
+    >
+      {/* Question title - centered with new styling */}
+      <h3 className="text-[16px] font-inter font-semibold text-[#0D0BCC] mb-3 text-center">
+        {currentQuestion?.title || "Ваш вопрос здесь"}
+      </h3>
+
+      {/* Question image - below title */}
+      {currentQuestion?.media_path && (
+        <img
+          src={currentQuestion.media_path}
+          alt="Question"
+          className="w-full h-auto mb-4 rounded-md object-cover"
+          style={{ maxHeight: '150px' }}
+        />
+      )}
+
+      {/* Question description */}
+      {currentQuestion?.description && (
+        <p className="text-[13px] text-[#707579] mb-4 leading-tight text-center">
+          {currentQuestion.description}
+        </p>
+      )}
+
+      {/* Answers list */}
+      <div className="space-y-3">
+        {currentQuestion?.type === 'single_choice' ? (
+          <RadioGroup>
+            {currentQuestion?.answers.map((answer, index) => (
+              <label
+                key={index}
+                className={`flex items-center p-3 rounded-md border-2 ${
+                  answer.is_correct
+                    ? 'border-[#77CD81] bg-[#F0F9F1]'
+                    : 'border-[#A2ACB0] hover:bg-[#F5F5F5]'
+                } cursor-pointer`}
+              >
+                <RadioGroupItem
+                  value={index.toString()}
+                  checked={answer.is_correct}
+                  className="mr-3"
+                />
+                <span className={`text-[15px] font-manrope ${
+                  answer.is_correct ? 'text-[#77CD81]' : 'text-[#000000]'
+                }`}>
+                  {answer.text}
+                </span>
+              </label>
+            ))}
+          </RadioGroup>
+        ) : currentQuestion?.type === 'multiple_choice' ? (
+          <>
+            {currentQuestion?.answers.map((answer, index) => (
+              <label
+                key={index}
+                className={`flex items-center p-3 rounded-md border-2 ${
+                  answer.is_correct
+                    ? 'border-[#77CD81] bg-[#F0F9F1]'
+                    : 'border-[#A2ACB0] hover:bg-[#F5F5F5]'
+                } cursor-pointer`}
+              >
+                <Checkbox
+                  checked={answer.is_correct}
+                  className="mr-3"
+                />
+                <span className={`text-[15px] font-manrope ${
+                  answer.is_correct ? 'text-[#77CD81]' : 'text-[#000000]'
+                }`}>
+                  {answer.text}
+                </span>
+              </label>
+            ))}
+          </>
+        ) : (
+          /* Text answer type - replaced with input */
+          <div className="mt-4">
+            <div className="relative">
+              <input
+                type="text"
+                disabled
+                placeholder="Введите ваш ответ..."
+                className="w-full p-3 text-[15px] font-manrope border-2 border-[#A2ACB0] rounded-md focus:outline-none focus:ring-2 focus:ring-[#0D0BCC] focus:border-transparent"
+              />
             </div>
+          </div>
+        )}
+      </div>
+    </div>
+  </div>
+</div>
           </div>
         </TabsContent>
       </Tabs>

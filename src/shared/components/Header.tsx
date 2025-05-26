@@ -27,8 +27,10 @@ export function Header() {
     <header className="sticky top-0 z-50 w-full bg-[#F1F1F1] backdrop-blur shadow-[0px_8px_29.1px_0px_#9292920D]">
       <div className="flex h-16 items-center justify-between px-6 py-[22px] mx-auto max-w-[1512px]">
         <div className="flex items-center gap-2">
-          <YourLogoIcon className="h-6 w-6" />
-          <span className="font-bold">Telehoot</span>
+           <img
+              src="/logo.svg"
+              alt="Telehoot"
+            />
         </div>
 
         <div className="flex items-center gap-4 font-manrope font-weight-500">
