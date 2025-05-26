@@ -354,7 +354,7 @@ export function QuizPage({ question, onNext, onFinish }: QuizPageProps) {
       <div className="mt-auto">
         {/* Answers Grid */}
         <div className={`grid ${answerColumns === 1 ? "grid-cols-1" : "grid-cols-2"} gap-6 mb-12`}>
-          {question.answers
+          {question.type !== "text" && question.answers
             .sort((a, b) => a.order - b.order)
             .map((answer, index) => (
               <div
