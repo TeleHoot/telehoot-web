@@ -8,7 +8,18 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@shared/components/ui/dropdown-menu";
-import { ChevronLeft, ChevronRight, FileQuestion, Loader2, MoreVertical, Search, Play, Pencil, Trash2 } from "lucide-react";
+import {
+  ChevronLeft,
+  ChevronRight,
+  FileQuestion,
+  Loader2,
+  MoreVertical,
+  Search,
+  Play,
+  Pencil,
+  Trash2,
+  Eye,
+} from "lucide-react";
 import { Pagination, PaginationContent, PaginationItem } from "@shared/components/ui/pagination";
 import { useQuery } from "react-query";
 import { getOrganizationQuizzes } from "@entity/Quiz";
@@ -49,7 +60,12 @@ const QuizzesPage = () => {
   };
 
   const handleEditQuiz = (quizId: string) => {
-    console.log("Редактировать квиз:", quizId);
+    navigate(`/quiz/${quizId}`, { replace: true });
+  };
+
+  const handleViewSessions = (quizId: string) => {
+    console.log(quizId)
+    navigate(`/sessions/${quizId}`, { replace: true });
   };
 
   const handleDeleteQuiz = (quizId: string) => {
@@ -189,6 +205,14 @@ const QuizzesPage = () => {
                             >
                               <Play className="h-4 w-4 mr-2" />
                               Запустить
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={() => handleViewSessions(quiz.id)}
+                              className="focus:bg-gray-100 cursor-pointer"
+                            >
+                              <Eye className="h-4 w-4 mr-2" />
+
+                              Посмотреть сессии
                             </DropdownMenuItem>
                             <DropdownMenuItem
                               onClick={() => handleEditQuiz(quiz.id)}

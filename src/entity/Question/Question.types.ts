@@ -17,6 +17,7 @@ export type QuestionCreate = {
 
   quiz_id?: string,
   questionId?: string
+  image?: Blob
 }
 
 export type Question = {

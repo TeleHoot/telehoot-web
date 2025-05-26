@@ -19,5 +19,16 @@ export const updateQuestion = async (params: QuestionCreate) => {
   delete params["quiz_id"];
   delete params["questionId"];
 
-  return await api.patch<Question>(route, params);
+  await api.patch<Question>(route, params);
+
+  if (params.image)
+    await api.post(route + "/image", {
+        file: params.image,
+      },
+      {
+        headers: {
+          "Content-Type": "multipart/form-data", // Важно!
+        },
+      },
+    );
 };

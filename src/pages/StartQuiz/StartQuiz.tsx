@@ -113,6 +113,8 @@ interface QuizSessionViewProps {
 }
 
 export function QuizSessionView({ sessionCode }: QuizSessionViewProps) {
+  const linkToBot = `https://t.me/${botName}?startapp=${sessionCode}`
+
   return (
     <div className="bg-white rounded-2xl p-6 h-[255px]" style={{ boxShadow: "0px -1px 31.5px -7px #1D1D1D40" }}>
       <div className="grid grid-cols-2 h-full">
@@ -121,7 +123,7 @@ export function QuizSessionView({ sessionCode }: QuizSessionViewProps) {
           <div className="flex-1 flex items-center justify-center">
             <div className="p-2 rounded-lg" style={{ border: "2px solid #0D0BCC" }}>
               <QRCodeSVG
-                value={sessionCode || ""}
+                value={linkToBot || ""}
                 size={140}
                 level="H"
               />
@@ -557,6 +559,7 @@ export function AllParticipants({ results, quizTitle }: AllParticipantsProps) {
 }
 
 type Stages = "start" | "counter" | "questions" | "results";
+const botName = import.meta.env.VITE_BOT_NAME
 
 function StartQuiz() {
   const {

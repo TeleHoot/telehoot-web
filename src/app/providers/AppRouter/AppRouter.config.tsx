@@ -23,6 +23,7 @@ import { Memberships } from "@pages/Memberships";
 import { Settings } from "@pages/Settings";
 import { Loader2 } from "lucide-react";
 import { StartQuiz } from "@pages/StartQuiz";
+import { Sessions } from "@pages/Sessions";
 
 const ToLazy = (LazyComponent: LazyExoticComponent<FC>): ReactNode => (
   <Suspense fallback={
@@ -126,7 +127,7 @@ export const ROUTES: RouteObject[] = [
         }, {
           path: "quizzes",
           element: ToLazy(Quizzes),
-        }, {
+        },{
           path: "memberships",
           element: ToLazy(Memberships),
         }, {
@@ -135,6 +136,10 @@ export const ROUTES: RouteObject[] = [
         },
         ],
       }, {
+        path: "sessions/:id",
+        element: ToLazy(Sessions),
+      },
+      {
         path: "quiz",
         element: ToLazy(CreateQuiz),
         children: [{

@@ -1,6 +1,8 @@
 import { FC, useEffect } from "react";
 import { TelegramLoginProps } from "./TelegramLogin.types";
 
+const botName = import.meta.env.VITE_BOT_NAME
+
 const TelegramLogin: FC<TelegramLoginProps> = (props) => {
   const { callBack } = props;
 
@@ -24,8 +26,8 @@ const TelegramLogin: FC<TelegramLoginProps> = (props) => {
     const script = document.createElement("script");
     script.src = "https://telegram.org/js/telegram-widget.js?22";
     script.async = true;
-    // TODO add to env
-    script.setAttribute("data-telegram-login", 'daeqwesadhsaljkfdh_bot');
+
+    script.setAttribute("data-telegram-login", botName);
     script.setAttribute("data-size", "large");
     script.setAttribute("data-radius", "8");
     script.setAttribute("data-auth-url", "https://oauth.telegram.org/auth");
