@@ -21,6 +21,9 @@ export default ({ mode }) => {
     server: {
       allowedHosts: [
         "front.frp.deti-durova.ru",
+        "front-stalinidze.frp.deti-durova.ru",
+        "deti-durova.online",
+        "telehoot.deti-durova.online"
       ],
     },
     plugins: [
