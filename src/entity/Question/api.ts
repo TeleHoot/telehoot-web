@@ -13,6 +13,13 @@ export const createQuestion = async (params: QuestionCreate) => {
   return await api.post<Question>(route, params);
 };
 
+export const deleteQuestion = async (params: {quizId: string, questionId: string}) => {
+  const route = `/quizzes/${params.quizId}/questions/${params.questionId}`;
+
+  return await api.delete<Question>(route);
+};
+
+
 export const updateQuestion = async (params: QuestionCreate) => {
   const route = `/quizzes/${params.quiz_id}/questions/${params.questionId}`;
 

@@ -1,6 +1,6 @@
 import { useCallback, useContext, useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { Check, ChevronLeft, ChevronRight, Loader2, LockKeyhole, X } from "lucide-react";
+import { Check, ChevronLeft, ChevronRight, Loader2, LockKeyhole, Trash2, X } from "lucide-react";
 import { useDropzone } from "react-dropzone";
 
 import { Button } from "@shared/components/ui/button";
@@ -12,6 +12,7 @@ import { useMutation, useQuery, useQueryClient } from "react-query";
 import {
   Answer,
   createQuestion,
+  deleteQuestion,
   getQuizQuestion,
   Question,
   QuestionCreate,
@@ -355,6 +356,41 @@ const CreateQuiz = () => {
     setCurrentQuestion(prev => ({ ...prev as Question, media_path: "" }));
     setPreview(null);
     setFileName("Файл не выбран");
+  };
+
+  const mutation = useMutation(deleteQuestion, {
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["questions", quizId] });
+
+    },
+  });
+
+  const handleDelete = (questionId: string) => {
+    mutation.mutate({ quizId, questionId });
+    setQuestions(prevQuestions => {
+      const updatedQuestions = prevQuestions.filter(q => q.id !== questionId);
+
+      // Находим индекс удаляемого вопроса
+      const deletedIndex = prevQuestions.findIndex(q => q.id === questionId);
+
+      // Определяем новый текущий вопрос
+      let newCurrentQuestion;
+
+      if (prevQuestions.length === 1) {
+        // Если это последний вопрос, оставляем undefined или null
+        newCurrentQuestion = null;
+      } else if (deletedIndex > 0) {
+        // Берем предыдущий вопрос (ближайший перед удаленным)
+        newCurrentQuestion = prevQuestions[deletedIndex - 1];
+      } else {
+        // Если удаляем первый вопрос, берем следующий (новый первый)
+        newCurrentQuestion = prevQuestions[deletedIndex + 1];
+      }
+
+      setCurrentQuestion(newCurrentQuestion);
+
+      return updatedQuestions;
+    });
   };
 
   return (
@@ -722,16 +758,20 @@ const CreateQuiz = () => {
                   )}
                 </div>
 
-                <div className="transition-opacity duration-300">
-                  {isSaving ? (
-                    <span className="flex items-center gap-2 text-[#707579] font-inter text-[14px]">
+                <div className="flex justify-between">
+                  <div className="transition-opacity duration-300">
+                    {isSaving ? (
+                      <span className="flex items-center gap-2 text-[#707579] font-inter text-[14px]">
                       <Loader2 className="h-4 w-4 animate-spin" />Изменения сохраняются
                     </span>
-                  ) : (
-                    <span className="flex items-center gap-2 text-[#77CD81] font-inter text-[14px]">
+                    ) : (
+                      <span className="flex items-center gap-2 text-[#77CD81] font-inter text-[14px]">
                       <Check className="h-4 w-4" />Изменения сохранены {saveTime}
                     </span>
-                  )}
+                    )}
+                  </div>
+
+                  {questions.length > 1 && <Trash2 onClick={() => handleDelete(currentQuestion?.id)} />}
                 </div>
               </div>
 

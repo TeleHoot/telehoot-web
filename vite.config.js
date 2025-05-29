@@ -16,7 +16,7 @@ export default ({ mode }) => {
     define: {
       __API__: JSON.stringify(env.VITE_API),
       __IS_DEV__: JSON.stringify(env.VITE_IS_DEV),
-      __BOT_NAME: JSON.stringify(env.VITE_BOT_NAME),
+      __BOT_NAME__: JSON.stringify(env.VITE_BOT_NAME),
     },
     server: {
       allowedHosts: [

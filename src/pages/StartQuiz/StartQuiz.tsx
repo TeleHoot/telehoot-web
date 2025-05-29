@@ -113,7 +113,7 @@ interface QuizSessionViewProps {
 }
 
 export function QuizSessionView({ sessionCode }: QuizSessionViewProps) {
-  const linkToBot = `https://t.me/${botName}?startapp=${sessionCode}`
+  const linkToBot = `https://t.me/${botName}?startapp=${sessionCode}`;
 
   return (
     <div className="bg-white rounded-2xl p-6 h-[255px]" style={{ boxShadow: "0px -1px 31.5px -7px #1D1D1D40" }}>
@@ -354,7 +354,7 @@ export function QuizPage({ question, onNext, onFinish }: QuizPageProps) {
       <div className="mt-auto">
         {/* Answers Grid */}
         <div className={`grid ${answerColumns === 1 ? "grid-cols-1" : "grid-cols-2"} gap-6 mb-12`}>
-          {question.answers
+          {question.type !== "text" && question.answers
             .sort((a, b) => a.order - b.order)
             .map((answer, index) => (
               <div
@@ -559,7 +559,7 @@ export function AllParticipants({ results, quizTitle }: AllParticipantsProps) {
 }
 
 type Stages = "start" | "counter" | "questions" | "results";
-const botName = import.meta.env.VITE_BOT_NAME
+const botName = import.meta.env.VITE_BOT_NAME;
 
 function StartQuiz() {
   const {
@@ -596,7 +596,13 @@ function StartQuiz() {
     setMessageHandlers(prev => ({
       ...prev as MessageHandlers,
       "join": (data) => {
-        setParticipants(prev => [...prev, data as participantsForView]);
+        setParticipants(prev => {
+            const a = prev.map(el => el.participant_id);
+            if (a.includes(data.participant_id)) return prev;
+
+            return [...prev, data as participantsForView];
+          },
+        );
       },
       "leave": (data) => {
         if (!(data as any)?.participant_id) return;
@@ -612,8 +618,9 @@ function StartQuiz() {
           setCurrentQuestion({ ...(data as any)?.question, isLast: (data as any).is_last_question });
       },
       "next": (data) => {
-        if ((data as any)?.question)
+        if ((data as any)?.question){
           setCurrentQuestion({ ...(data as any)?.question, isLast: (data as any).is_last_question });
+        }
       },
       "finish": (data) => {
         setResults(data.results as Results);
