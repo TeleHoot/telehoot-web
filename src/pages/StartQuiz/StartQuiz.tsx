@@ -14,8 +14,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 
 const WebSocketUrl = import.meta.env.VITE_API;
 
-type MessageType = "join" | "start" | "next" | "leave" | "finish" | "cancel" | "error"
-const messageTypes: MessageType[] = ["join", "start", "next", "leave", "finish", "cancel", "error"];
+type MessageType = "join" | "start" | "next" | "leave" | "finish" | "cancel" | "error" | "answer"
+const messageTypes: MessageType[] = ["join", "start", "next", "leave", "finish", "cancel", "error", "answer"];
 
 type MessageHandlers = Record<MessageType, (data: object) => void>
 
@@ -304,9 +304,21 @@ interface QuizPageProps {
   question?: Question & { isLast: boolean };
   onNext: () => void;
   onFinish: () => void;
+  participantsWithAnswersCount: number;
+  participantsCount: number;
+  currentQustionIndex: number;
+  qustionsCount: number;
 }
 
-export function QuizPage({ question, onNext, onFinish }: QuizPageProps) {
+export function QuizPage({
+                           question,
+                           onNext,
+                           onFinish,
+                           participantsWithAnswersCount,
+                           participantsCount,
+                           currentQustionIndex,
+                           qustionsCount,
+                         }: QuizPageProps) {
   const [showAnswers, setShowAnswers] = useState(false);
 
   const handleShowAnswers = () => {
@@ -327,6 +339,13 @@ export function QuizPage({ question, onNext, onFinish }: QuizPageProps) {
   return (
     <div
       className={`mx-auto p-6 bg-white min-h-screen flex-1 flex flex-col ${question.media_path ? "" : "justify-between"}`}>
+      <p>
+        Ответов {participantsWithAnswersCount} из {participantsCount}
+      </p>
+      <p>
+        Раунд {currentQustionIndex} из {qustionsCount}
+      </p>
+
       {/* Question Section */}
       <div className={`mb-12 text-center ${question.media_path ? "" : "mt-auto"}`}>
         <h1 className="text-[64px] font-bold mb-8 font-manrope" style={{ color: "#0D0BCC", lineHeight: "70px" }}>
@@ -583,7 +602,12 @@ function StartQuiz() {
   const [currentQuestion, setCurrentQuestion] = useState<Question & { isLast: boolean }>();
   const [results, setResults] = useState<Results | null>(null);
   const [showAllParticipants, setShowAllParticipants] = useState(false);
+  const [participantsIdWithAnswers, setParticipantsIdWithAnswers] = useState([]);
+  const [participantsCount, setParticipantsCount] = useState(0);
+  const [currentQustionIndex, setCurrentQustionIndex] = useState(1);
   const { id: quizId } = useParams();
+  console.log(participantsIdWithAnswers);
+  console.log(participantsCount);
 
   useEffect(() => {
     createSessionMutate({
@@ -599,7 +623,7 @@ function StartQuiz() {
         setParticipants(prev => {
             const a = prev.map(el => el.participant_id);
             if (a.includes(data.participant_id)) return prev;
-
+          setParticipantsCount(prev => prev + 1)
             return [...prev, data as participantsForView];
           },
         );
@@ -618,16 +642,30 @@ function StartQuiz() {
           setCurrentQuestion({ ...(data as any)?.question, isLast: (data as any).is_last_question });
       },
       "next": (data) => {
-        if ((data as any)?.question){
+        if ((data as any)?.question) {
           setCurrentQuestion({ ...(data as any)?.question, isLast: (data as any).is_last_question });
+          setParticipantsIdWithAnswers([]);
+          setCurrentQustionIndex(prev => prev + 1);
         }
       },
       "finish": (data) => {
         setResults(data.results as Results);
+        setCurrentQustionIndex(1);
+        setParticipantsIdWithAnswers([]);
         setStage("results");
+      },
+      "answer": (data) => {
+        const id = data.participant_id;
+        setParticipantsIdWithAnswers(prev => {
+          if (prev.includes(id)) return prev;
+
+          return [...prev, !prev.includes(id) ? id : ""];
+        });
       },
     }));
   }, [setMessageHandlers, navigate]);
+
+  console.log(quiz)
 
   const handleEndQuiz = () => {
     try {
@@ -666,7 +704,15 @@ function StartQuiz() {
   );
 
   if (stage === "questions") return (
-    <QuizPage question={currentQuestion} onNext={nextQuestion} onFinish={finishQuiz} />
+    <QuizPage
+      question={currentQuestion}
+      onNext={nextQuestion}
+      onFinish={finishQuiz}
+      participantsWithAnswersCount={participantsIdWithAnswers.length}
+      currentQustionIndex={currentQustionIndex}
+      qustionsCount={quiz?.questions_count}
+      participantsCount={(participantsCount/2)-1}
+    />
   );
 
   if (stage === "results" && results && quiz) return (
