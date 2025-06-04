@@ -106,7 +106,7 @@ const RedirectToFirstOrganization: FC = () => {
   const orgContext = useContext(OrganizationContext);
 
   if (orgContext?.activeOrganization)
-    return <Navigate to={`/organization/${orgContext.activeOrganization.id}`} replace />;
+    return <Navigate to={`/organization/${orgContext.activeOrganization.id}/about`} replace />;
 };
 
 export const ROUTES: RouteObject[] = [
@@ -115,7 +115,7 @@ export const ROUTES: RouteObject[] = [
     element: <ProtectedRoute />,
     children: [
       {
-        index: true,
+        path: '/',
         element: <RedirectToFirstOrganization />,
       },
       {

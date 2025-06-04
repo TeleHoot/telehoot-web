@@ -6,11 +6,12 @@ import { Button } from "@shared/components/ui/button";
 import { ScrollArea } from "@shared/components/ui/scroll-area";
 import { getQuiz } from "@entity/Quiz";
 import { OrganizationContext } from "@app/providers/AppRouter/AppRouter.config";
-import { createSession, SessionStatus } from "@entity/Session";
+import { createSession, exportResults, SessionStatus } from "@entity/Session";
 import { Participant, ParticipantRole } from "@entity/Participant";
 import { Avatar, AvatarFallback, AvatarImage } from "@shared/components/ui/avatar";
 import { Question } from "@entity/Question";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@shared/components/ui/table";
+import dayjs from "dayjs";
 
 const WebSocketUrl = import.meta.env.VITE_API;
 
@@ -25,8 +26,9 @@ export const useWebSocket = (url: string | null, sessionId?: string) => {
   const [messageHandlers, setMessageHandlers] = useState<MessageHandlers | null>(null);
 
   useEffect(() => {
-    if (!url || !sessionId) return;
+    if (!url || !sessionId || !messageHandlers) return;
 
+    console.log('qewqewqewqewqeqwewqeqewqe')
     socketRef.current = new WebSocket(url + "/api/v1/sessions/handle/id/" + sessionId);
     const socket = socketRef.current;
 
@@ -532,13 +534,50 @@ export function QuizResults({ results, quizTitle, onNext }: QuizResultsProps) {
 interface AllParticipantsProps {
   results: Results;
   quizTitle: string;
+  sessionId: string;
+  currentOrganizationId: string;
+  quizId: string;
 }
 
-export function AllParticipants({ results, quizTitle }: AllParticipantsProps) {
+export function AllParticipants({
+                                  results,
+                                  quizTitle,
+                                  sessionId,
+                                  currentOrganizationId,
+                                  quizId,
+                                }: AllParticipantsProps) {
   // Сортируем участников по очкам
   const sortedResults = [...results].sort(
     (a, b) => b.total_points - a.total_points,
   );
+
+  const navigate = useNavigate();
+
+  const mutation = useMutation(exportResults);
+
+  async function handleExportResults(sessionId: string) {
+    try {
+      mutation.mutate({
+        organizationId: currentOrganizationId as string,
+        quizId: quizId as string,
+        sessionId: sessionId,
+      });
+
+      if (!mutation?.data?.data) return;
+
+      const url = URL.createObjectURL(new Blob([mutation?.data?.data]));
+
+      const link = document.createElement("a");
+
+      link.href = url;
+      link.setAttribute("download", `sessions_expoerted_${dayjs().format("DD.MM.YYYY_HH:mm")}.xlsx`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    } catch (error) {
+      console.error("Ошибка при экспорте результатов:", error);
+    }
+  }
 
   return (
     <div className="flex flex-col items-center min-h-screen p-6 bg-gray-50">
@@ -573,6 +612,9 @@ export function AllParticipants({ results, quizTitle }: AllParticipantsProps) {
           </TableBody>
         </Table>
       </div>
+
+      <Button onClick={() => handleExportResults(sessionId)}>Экспорт</Button>
+      <Button onClick={() => navigate(`/sessions/${quizId}`)}>Закрыть</Button>
     </div>
   );
 }
@@ -623,7 +665,7 @@ function StartQuiz() {
         setParticipants(prev => {
             const a = prev.map(el => el.participant_id);
             if (a.includes(data.participant_id)) return prev;
-          setParticipantsCount(prev => prev + 1)
+            setParticipantsCount(prev => prev + 1);
             return [...prev, data as participantsForView];
           },
         );
@@ -665,7 +707,6 @@ function StartQuiz() {
     }));
   }, [setMessageHandlers, navigate]);
 
-  console.log(quiz)
 
   const handleEndQuiz = () => {
     try {
@@ -711,7 +752,7 @@ function StartQuiz() {
       participantsWithAnswersCount={participantsIdWithAnswers.length}
       currentQustionIndex={currentQustionIndex}
       qustionsCount={quiz?.questions_count}
-      participantsCount={(participantsCount/2)-1}
+      participantsCount={(participantsCount / 2) - 1}
     />
   );
 
@@ -727,6 +768,9 @@ function StartQuiz() {
         <AllParticipants
           results={results}
           quizTitle={quiz?.name}
+          sessionId={session.id}
+          currentOrganizationId={currentOrganizationId}
+          quizId={quizId}
         />
       )}
     </>

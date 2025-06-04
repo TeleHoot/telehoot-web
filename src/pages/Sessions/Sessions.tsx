@@ -254,7 +254,6 @@ const Sessions = () => {
 
   return (
     <div className="mx-auto max-w-[890px] space-y-6 font-inter px-4 py-10">
-      {/* Хедер вкладок */}
       <Tabs
         value={activeTab}
         onValueChange={handleTabChange}
@@ -264,7 +263,7 @@ const Sessions = () => {
           <TabsTrigger value={ABOUT_PAGE} className={tabTriggerClass}>
             Обзор
           </TabsTrigger>
-          <TabsTrigger value={QUIZ_PAGE} className={tabTriggerClass}>
+          <TabsTrigger value={QUIZ_PAGE} className={tabTriggerClass} onClick={()=>handleTabChange('quizzes')}>
             Квизы
           </TabsTrigger>
           <TabsTrigger value={MEMBERS_PAGE} className={tabTriggerClass}>

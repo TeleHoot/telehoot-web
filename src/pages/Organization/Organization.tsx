@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Tabs, TabsList, TabsTrigger } from "@shared/components/ui/tabs";
 import { TabsContent } from "@radix-ui/react-tabs";
-import { Navigate, Outlet } from "react-router-dom";
+import { Navigate, Outlet, useLocation } from "react-router-dom";
 
 const ABOUT_PAGE = "about";
 const QUIZ_PAGE = "quizzes";
@@ -11,7 +11,8 @@ const SETTINGS_PAGE = "settings";
 type Pages = typeof ABOUT_PAGE | typeof QUIZ_PAGE | typeof MEMBERS_PAGE | typeof SETTINGS_PAGE;
 
 const Organization = () => {
-  const [activeTab, setActiveTab] = useState<Pages>("about");
+  const location = useLocation();
+  const [activeTab, setActiveTab] = useState<Pages>(location.pathname.split("/")[location.pathname.split("/").length - 1]);
 
   const tabTriggerClass = `
     px-0 pb-3 relative shadow-none rounded-none
