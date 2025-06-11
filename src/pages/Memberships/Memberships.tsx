@@ -1,5 +1,5 @@
 import { useContext, useState } from "react";
-import { useQuery } from "react-query";
+import { useQuery, useMutation } from "react-query";
 import { Card, CardContent } from "@shared/components/ui/card";
 import { Tabs, TabsList, TabsTrigger } from "@shared/components/ui/tabs";
 import { Avatar, AvatarFallback, AvatarImage } from "@shared/components/ui/avatar";
@@ -11,7 +11,7 @@ import {
   DropdownMenuTrigger,
 } from "@shared/components/ui/dropdown-menu";
 import { Check, MoreVertical, X, Search, Loader2 } from "lucide-react";
-import { getMemberships, role } from "@entity/Membership";
+import { getMemberships, updateMembership, role, status } from "@entity/Membership";
 import { OrganizationContext } from "@app/providers/AppRouter/AppRouter.config";
 import { Input } from "@shared/components/ui/input";
 
@@ -38,6 +38,12 @@ export default function UsersPage() {
 
   const memberships = membershipsQuery?.data;
 
+  // Мутация для обновления membership
+  const { mutateAsync: updateMembershipMutation } = useMutation({
+    mutationFn: (params: { organizationId: string; userId: string; role?: role; status?: status }) =>
+      updateMembership(params),
+  });
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-[calc(100vh-200px)]">
@@ -54,23 +60,39 @@ export default function UsersPage() {
     return true;
   });
 
-  const handleApprove = async (membershipId: string) => {
-    await approveMembership(membershipId);
+  const handleApprove = async (membershipId: string, userId: string) => {
+    await updateMembershipMutation({
+      organizationId: currentOrganizationId,
+      userId,
+      status: "approved",
+    });
     refetch();
   };
 
-  const handleReject = async (membershipId: string) => {
-    await rejectMembership(membershipId);
+  const handleReject = async (membershipId: string, userId: string) => {
+    await updateMembershipMutation({
+      organizationId: currentOrganizationId,
+      userId,
+      status: "declined",
+    });
     refetch();
   };
 
-  const handleRemove = async (membershipId: string) => {
-    await removeMembership(membershipId);
+  const handleChangeRole = async (membershipId: string, userId: string, newRole: role) => {
+    await updateMembershipMutation({
+      organizationId: currentOrganizationId,
+      userId,
+      role: newRole,
+    });
     refetch();
   };
 
-  const handleChangeRole = async (membershipId: string, newRole: role) => {
-    await changeMembershipRole(membershipId, newRole);
+  const handleRemove = async (membershipId: string, userId: string) => {
+    await updateMembershipMutation({
+      organizationId: currentOrganizationId,
+      userId,
+      status: "declined",
+    });
     refetch();
   };
 
@@ -172,44 +194,43 @@ export default function UsersPage() {
                             <Button
                               variant="outline"
                               size="sm"
-                              onClick={() => handleApprove(member.id)}
+                              onClick={() => handleApprove(member.id, member.user.id)}
                             >
                               <Check className="h-4 w-4 mr-1 cursor-pointer" /> Принять
                             </Button>
                             <Button
                               variant="outline"
                               size="sm"
-                              onClick={() => handleReject(member.id)}
+                              onClick={() => handleReject(member.id, member.user.id)}
                             >
                               <X className="h-4 w-4 mr-1 cursor-pointer" /> Отклонить
                             </Button>
                           </>
                         ) : (
-                          <DropdownMenu className="cursor-pointer">
+                          <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="sm" className="cursor-pointer">
+                              <Button variant="ghost" size="sm">
                                 <MoreVertical className="h-4 w-4 cursor-pointer" />
                               </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end" className="bg-white">
                               <DropdownMenuItem
-                                onClick={() => handleChangeRole(member.id, "owner")} className="cursor-pointer"
+                                onClick={() => handleChangeRole(member.id, member.user.id, "owner")}
                               >
                                 Сделать администратором
                               </DropdownMenuItem>
                               <DropdownMenuItem
-                                onClick={() => handleChangeRole(member.id, "editor")} className="cursor-pointer"
+                                onClick={() => handleChangeRole(member.id, member.user.id, "editor")}
                               >
                                 Сделать редактором
                               </DropdownMenuItem>
                               <DropdownMenuItem
-                                onClick={() => handleChangeRole(member.id, "presenter")} className="cursor-pointer"
+                                onClick={() => handleChangeRole(member.id, member.user.id, "presenter")}
                               >
                                 Сделать ведущим
                               </DropdownMenuItem>
                               <DropdownMenuItem
-                                onClick={() => handleRemove(member.id)}
-                                className="cursor-pointer"
+                                onClick={() => handleRemove(member.id, member.user.id)}
                               >
                                 Удалить из организации
                               </DropdownMenuItem>
@@ -227,21 +248,4 @@ export default function UsersPage() {
       </div>
     </div>
   );
-}
-
-// Заглушки для API функций
-async function approveMembership(membershipId: string) {
-  // Реализация API вызова
-}
-
-async function rejectMembership(membershipId: string) {
-  // Реализация API вызова
-}
-
-async function removeMembership(membershipId: string) {
-  // Реализация API вызова
-}
-
-async function changeMembershipRole(membershipId: string, newRole: role) {
-  // Реализация API вызова
 }

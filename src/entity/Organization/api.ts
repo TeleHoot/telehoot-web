@@ -6,6 +6,10 @@ export const getUserOrganization = async () => {
   return await api.get<Organization[]>("/users/me/organizations");
 };
 
+export const getUserOrganizationById = async (id: string) => {
+  return await api.get<Organization>(`/organizations/${id}`);
+};
+
 export const createOrganization = async (data: OrganizationData) => {
   const org = await api.post<void, Organization>("/organizations", {
     name: data.name,

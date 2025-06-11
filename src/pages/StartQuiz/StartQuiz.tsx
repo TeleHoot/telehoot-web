@@ -28,7 +28,6 @@ export const useWebSocket = (url: string | null, sessionId?: string) => {
   useEffect(() => {
     if (!url || !sessionId || !messageHandlers) return;
 
-    console.log('qewqewqewqewqeqwewqeqewqe')
     socketRef.current = new WebSocket(url + "/api/v1/sessions/handle/id/" + sessionId);
     const socket = socketRef.current;
 

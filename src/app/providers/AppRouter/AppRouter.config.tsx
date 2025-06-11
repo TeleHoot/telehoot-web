@@ -1,4 +1,4 @@
-import { Navigate, Outlet, RouteObject } from "react-router-dom";
+import { Navigate, Outlet, RouteObject, useNavigate } from "react-router-dom";
 import {
   createContext,
   FC,
@@ -47,6 +47,7 @@ export const OrganizationContext = createContext<OrganizationContext | null>(nul
 const OrgProvider: FC<PropsWithChildren> = props => {
   const [contextData, setContextData] = useState<OrganizationContext | null>(null);
 
+  const navigate = useNavigate()
   const { data: orgData, isLoading: orgIsLoading } = useQuery("organization", getUserOrganization);
 
   useEffect(() => {
@@ -56,10 +57,14 @@ const OrgProvider: FC<PropsWithChildren> = props => {
       setContextData({
         organizations: orgData.data,
         activeOrganization: activeOrganization ? activeOrganization : orgData.data[0],
-        setActiveOrganization: (org: Organization) => setContextData(prev => ({
-          ...prev as OrganizationContext,
-          activeOrganization: org,
-        })),
+        setActiveOrganization: (org: Organization) => setContextData(prev => {
+          navigate(`/organization/${org.id}/about`)
+
+          return {
+            ...prev as OrganizationContext,
+            activeOrganization: org,
+          };
+        }),
       });
     }
   }, [orgData?.data]);
@@ -115,7 +120,7 @@ export const ROUTES: RouteObject[] = [
     element: <ProtectedRoute />,
     children: [
       {
-        path: '/',
+        path: "/",
         element: <RedirectToFirstOrganization />,
       },
       {
@@ -127,7 +132,7 @@ export const ROUTES: RouteObject[] = [
         }, {
           path: "quizzes",
           element: ToLazy(Quizzes),
-        },{
+        }, {
           path: "memberships",
           element: ToLazy(Memberships),
         }, {
@@ -150,11 +155,11 @@ export const ROUTES: RouteObject[] = [
     ],
   }, {
     path: "/",
-    element: <ProtectedRoute withHeader={false}/>,
+    element: <ProtectedRoute withHeader={false} />,
     children: [{
       path: "startQuiz/:id",
       element: ToLazy(StartQuiz),
-    },],
+    }],
   },
 
   {
