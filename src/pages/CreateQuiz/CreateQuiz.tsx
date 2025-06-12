@@ -154,7 +154,6 @@ const CreateQuiz = () => {
         updateQuizMutation.mutate({
           quizId,
           name,
-          image,
           description,
           organization_id: currentOrganizationId as string,
         });
