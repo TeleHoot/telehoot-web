@@ -7,8 +7,9 @@ import dayjs from "dayjs";
 const About = () => {
   const organizationContext = useContext(OrganizationContext);
   const currentOrganization = organizationContext?.activeOrganization;
-  console.log(currentOrganization?.image_path);
 
+
+  console.log(currentOrganization);
   return (
     <div className="mx-auto py-8 max-w-[890px] px-4">
       <div className="flex flex-col md:flex-row gap-8 mb-8">

@@ -214,7 +214,7 @@ const Sessions = () => {
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
                 <Link
-                  to={`/session/${session.id}/results`}
+                  to={`/session/results?sessionId=${session.id}&quizId=${quizId}`}
                   className="focus:bg-gray-100 cursor-pointer"
                 >
                   <Eye className="h-4 w-4 mr-2" />

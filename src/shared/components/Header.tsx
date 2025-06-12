@@ -17,7 +17,7 @@ export function Header() {
   const organizationContext = useContext(OrganizationContext);
 
   const onOrgClick = (organization: Organization) => {
-    localStorage.setItem("organization", JSON.stringify(organization));
+    localStorage.setItem("organization", organization.id);
     organizationContext?.setActiveOrganization(organization);
   };
 
@@ -68,10 +68,6 @@ export function Header() {
             </DropdownMenuTrigger>
             <DropdownMenuContent className="w-56 bg-white" align="end">
               <DropdownMenuLabel>Мой профиль</DropdownMenuLabel>
-              <DropdownMenuItem>
-                <User className="mr-2 h-4 w-4" />
-                <span className="cursor-pointer">Профиль</span>
-              </DropdownMenuItem>
               <DropdownMenuItem>
                 <LogOut className="mr-2 h-4 w-4" />
                 <span className="cursor-pointer">Выйти</span>

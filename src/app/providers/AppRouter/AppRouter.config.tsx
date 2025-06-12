@@ -24,6 +24,7 @@ import { Settings } from "@pages/Settings";
 import { Loader2 } from "lucide-react";
 import { StartQuiz } from "@pages/StartQuiz";
 import { Sessions } from "@pages/Sessions";
+import { Results } from "@pages/Results";
 
 const ToLazy = (LazyComponent: LazyExoticComponent<FC>): ReactNode => (
   <Suspense fallback={
@@ -47,18 +48,23 @@ export const OrganizationContext = createContext<OrganizationContext | null>(nul
 const OrgProvider: FC<PropsWithChildren> = props => {
   const [contextData, setContextData] = useState<OrganizationContext | null>(null);
 
-  const navigate = useNavigate()
+  const navigate = useNavigate();
   const { data: orgData, isLoading: orgIsLoading } = useQuery("organization", getUserOrganization);
 
+  console.log("dsadasdasdas");
+
   useEffect(() => {
+    console.log("dsadasdasdas1111");
+
     if (orgData?.data) {
-      const activeOrganization = localStorage.getItem("organization") ? JSON.parse(localStorage.getItem("organization") as string) : null;
+      const activeOrganizationId = localStorage.getItem("organization") ? localStorage.getItem("organization") : null;
+      const a = orgData.data.find(el => el.id === activeOrganizationId);
 
       setContextData({
         organizations: orgData.data,
-        activeOrganization: activeOrganization ? activeOrganization : orgData.data[0],
+        activeOrganization: a ? a : orgData.data[0],
         setActiveOrganization: (org: Organization) => setContextData(prev => {
-          navigate(`/organization/${org.id}/about`)
+          navigate(`/organization/${org.id}/about`);
 
           return {
             ...prev as OrganizationContext,
@@ -143,6 +149,10 @@ export const ROUTES: RouteObject[] = [
       }, {
         path: "sessions/:id",
         element: ToLazy(Sessions),
+      },
+      {
+        path: "session/results",
+        element: ToLazy(Results),
       },
       {
         path: "quiz",
