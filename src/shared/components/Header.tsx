@@ -6,11 +6,13 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
-import { ChevronDown, LogOut, Plus, User } from "lucide-react";
+import { ChevronDown, LogOut, Plus } from "lucide-react";
 import { AuthContext, OrganizationContext } from "@app/providers/AppRouter/AppRouter.config";
 import { useContext, useState } from "react";
 import { Organization } from "@entity/Organization";
 import { CreateOrganizationModal } from "@feature/CreateOrganization";
+import { logout } from "@entity/User";
+import { useNavigate } from "react-router-dom";
 
 export function Header() {
   const user = useContext(AuthContext);
@@ -23,14 +25,15 @@ export function Header() {
 
   const [isModalOpen, setIsModalOpen] = useState(false);
 
+  const navigate = useNavigate();
   return (
     <header className="sticky top-0 z-50 w-full bg-[#F1F1F1] backdrop-blur shadow-[0px_8px_29.1px_0px_#9292920D]">
       <div className="flex h-16 items-center justify-between px-6 py-[22px] mx-auto max-w-[1512px]">
         <div className="flex items-center gap-2">
-           <img
-              src="/logo.svg"
-              alt="Telehoot"
-            />
+          <img
+            src="/logo.svg"
+            alt="Telehoot"
+          />
         </div>
 
         <div className="flex items-center gap-4 font-manrope font-weight-500">
@@ -68,7 +71,12 @@ export function Header() {
             </DropdownMenuTrigger>
             <DropdownMenuContent className="w-56 bg-white" align="end">
               <DropdownMenuLabel>Мой профиль</DropdownMenuLabel>
-              <DropdownMenuItem>
+              <DropdownMenuItem onClick={() => {
+                logout();
+                navigate("/login", {
+                  replace: true,
+                });
+              }}>
                 <LogOut className="mr-2 h-4 w-4" />
                 <span className="cursor-pointer">Выйти</span>
               </DropdownMenuItem>
