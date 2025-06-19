@@ -26,7 +26,7 @@ export const useWebSocket = (url: string | null, sessionId?: string) => {
   const [messageHandlers, setMessageHandlers] = useState<MessageHandlers | null>(null);
 
   useEffect(() => {
-    if (!url || !sessionId || !messageHandlers) return;
+    if (!url || !sessionId || !messageHandlers || socketRef.current) return;
 
     socketRef.current = new WebSocket(url + "/api/v1/sessions/handle/id/" + sessionId);
     const socket = socketRef.current;
@@ -67,7 +67,7 @@ export const useQuizSession = () => {
     },
   });
 
-  const { mutate: createSessionMutate, data: sessionData } = useMutation(createSession);
+  const { mutate: createSessionMutate, data: sessionData } = useMutation(['session'],createSession);
   //const { mutate: createHost } = useMutation(createParticipant);
 
   const { data, setMessageHandlers, send } = useWebSocket(WebSocketUrl, sessionData?.data?.id);
@@ -647,15 +647,17 @@ function StartQuiz() {
   const [participantsCount, setParticipantsCount] = useState(0);
   const [currentQustionIndex, setCurrentQustionIndex] = useState(1);
   const { id: quizId } = useParams();
-  console.log(participantsIdWithAnswers);
-  console.log(participantsCount);
 
   useEffect(() => {
+    console.log(session?.id)
+    if(session?.id || isLoading) return
+
+    console.log('qqqq')
     createSessionMutate({
       organizationId: currentOrganizationId as string,
       quizId: quizId as string,
     });
-  }, [createSessionMutate, currentOrganizationId, quizId]);
+  }, [createSessionMutate, currentOrganizationId, quizId,session, isLoading]);
 
   useEffect(() => {
     setMessageHandlers(prev => ({
