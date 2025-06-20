@@ -798,7 +798,7 @@ const CreateQuiz = () => {
                     {/* Question image - below title */}
                     {(currentQuestion?.media_path || preview) && (
                       <img
-                        src={currentQuestion?.media_path || preview}
+                        src={preview || currentQuestion?.media_path}
                         alt="Question"
                         className="w-full h-auto mb-4 rounded-md object-cover"
                         style={{ maxHeight: "150px" }}
