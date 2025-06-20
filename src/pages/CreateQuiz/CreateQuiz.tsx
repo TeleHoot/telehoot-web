@@ -104,7 +104,7 @@ const CreateQuiz = () => {
         setQuestions(data.data);
         if (data.data.length > 0) {
           setCurrentQuestion(data.data[0]);
-          setPreview(data.data[0].media_path || null);
+          //setPreview(data.data[0].media_path || null);
           setFileName(data.data[0].media_path ? "Изображение загружено" : "Файл не выбран");
         }
       },
