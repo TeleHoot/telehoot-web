@@ -65,7 +65,7 @@ const OrganizationSettings = () => {
         id: currentOrganization.id,
         name,
         description,
-        image: undefined,
+        image: image,
         deletedAt: new Date().toISOString(),
       });
     },
