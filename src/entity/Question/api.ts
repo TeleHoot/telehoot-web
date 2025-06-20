@@ -25,6 +25,7 @@ export const updateQuestion = async (params: QuestionCreate) => {
 
   delete params["quiz_id"];
   delete params["questionId"];
+  delete params["media_path"];
 
   await api.patch<Question>(route, params);
 
