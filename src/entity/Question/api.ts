@@ -28,6 +28,8 @@ export const updateQuestion = async (params: QuestionCreate) => {
 
   await api.patch<Question>(route, params);
 
+  console.log(params.image);
+
   if (params.image)
     await api.post(route + "/image", {
         file: params.image,

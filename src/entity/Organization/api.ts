@@ -12,7 +12,7 @@ export const getUserOrganizationById = async (id: string) => {
 
 
 export const updateOrganization = async (data: OrganizationData & { id: string }) => {
-  return await api.patch<Organization>(`/organizations/${data.id}`, {
+  const org = await api.patch<Organization>(`/organizations/${data.id}`, {
     name: data.name,
     description: data.description,
   });

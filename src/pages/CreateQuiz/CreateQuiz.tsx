@@ -63,7 +63,6 @@ const CreateQuiz = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { id: urlQuizId } = useParams();
-  console.log(urlQuizId);
   const [activeTab, setActiveTab] = useState("info");
   const [quizId, setQuizId] = useState<string | undefined>(urlQuizId);
   const organizationContext = useContext(OrganizationContext);
@@ -89,7 +88,6 @@ const CreateQuiz = () => {
     {
       enabled: !!quizId,
       onSuccess: (data) => {
-        console.log(data);
         setName(data.data.name);
         setDescription(data.data.description);
       },
@@ -113,9 +111,13 @@ const CreateQuiz = () => {
     },
   );
 
+  const [image, setImage] = useState();
+
   const onDrop = useCallback((acceptedFiles: File[]) => {
     const file = acceptedFiles[0];
     if (file) {
+      console.log(file)
+      setImage(file)
       setCurrentQuestion(prev => ({ ...prev as Question, image: file }));
       setPreview(URL.createObjectURL(file));
       setFileName(file.name);
@@ -194,10 +196,11 @@ const CreateQuiz = () => {
   };
 
   const debouncedUpdate = useRef(
-    debounce((questionData: Question, quizId?: string) => {
+    debounce((questionData: Question, quizId?: string, image) => {
       if (!quizId) return;
       updateQuestionMutation.mutate({
         ...questionData,
+        image: image,
         quiz_id: quizId,
         questionId: questionData.id,
       });
@@ -206,7 +209,8 @@ const CreateQuiz = () => {
 
   useEffect(() => {
     if (currentQuestion) {
-      debouncedUpdate(currentQuestion, quizId);
+      console.log(currentQuestion)
+      debouncedUpdate(currentQuestion, quizId, image);
     }
   }, [currentQuestion, debouncedUpdate, quizId]);
 
@@ -220,8 +224,6 @@ const CreateQuiz = () => {
       setIsSaving(false);
     }
   }, [updateQuestionMutation.isLoading, currentQuestion]);
-
-  console.log(currentQuestion);
 
   const handleAddAnswer = () => {
     if (!currentQuestion) return;
@@ -794,9 +796,9 @@ const CreateQuiz = () => {
                     </h3>
 
                     {/* Question image - below title */}
-                    {currentQuestion?.media_path && (
+                    {(currentQuestion?.media_path || preview) && (
                       <img
-                        src={currentQuestion.media_path}
+                        src={currentQuestion?.media_path || preview}
                         alt="Question"
                         className="w-full h-auto mb-4 rounded-md object-cover"
                         style={{ maxHeight: "150px" }}

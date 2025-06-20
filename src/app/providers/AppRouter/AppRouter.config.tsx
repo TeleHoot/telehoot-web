@@ -51,10 +51,8 @@ const OrgProvider: FC<PropsWithChildren> = props => {
   const navigate = useNavigate();
   const { data: orgData, isLoading: orgIsLoading } = useQuery("organization", getUserOrganization);
 
-  console.log("dsadasdasdas");
 
   useEffect(() => {
-    console.log("dsadasdasdas1111");
 
     if (orgData?.data) {
       const activeOrganizationId = localStorage.getItem("organization") ? localStorage.getItem("organization") : null;

@@ -56,7 +56,6 @@ const QuizzesPage = () => {
 
   const handleCreateQuiz = () => {
     navigate("/quiz", { replace: true });
-    console.log("Создать новый квиз");
   };
 
   const handleEditQuiz = (quizId: string) => {
@@ -64,7 +63,6 @@ const QuizzesPage = () => {
   };
 
   const handleViewSessions = (quizId: string) => {
-    console.log(quizId)
     navigate(`/sessions/${quizId}`, { replace: true });
   };
 

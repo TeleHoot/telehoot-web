@@ -49,7 +49,6 @@ const Organization = () => {
   const isPending = membershipStatus === "pending";
   const isDeclined = membershipStatus === "declined";
 
-  console.log(organizationData)
   const orgName = organizationData?.data?.name;
 
   useEffect(() => {

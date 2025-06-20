@@ -27,7 +27,6 @@ export default function AuthForm() {
   );
 
   const authorize = (data: TelegramLoginData) => {
-    console.log(data);
     mutation.mutate(data); // Вызываем мутацию с полученными данными
   };
 

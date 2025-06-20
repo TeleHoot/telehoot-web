@@ -649,10 +649,8 @@ function StartQuiz() {
   const { id: quizId } = useParams();
 
   useEffect(() => {
-    console.log(session?.id)
     if(session?.id || isLoading) return
 
-    console.log('qqqq')
     createSessionMutate({
       organizationId: currentOrganizationId as string,
       quizId: quizId as string,
