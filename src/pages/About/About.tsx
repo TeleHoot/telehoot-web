@@ -8,44 +8,45 @@ const About = () => {
   const organizationContext = useContext(OrganizationContext);
   const currentOrganization = organizationContext?.activeOrganization;
 
+
+  console.log(currentOrganization);
   return (
-    <div className="container mx-auto py-8">
+    <div className="mx-auto py-8 max-w-[890px] px-4">
       <div className="flex flex-col md:flex-row gap-8 mb-8">
-        <div className="w-full md:w-1/3 lg:w-1/4">
-          <Avatar className="w-full h-auto aspect-square rounded-lg">
+        <div className="w-[152px] h-[152px] flex-shrink-0">
+          <Avatar className="w-full h-full rounded-lg bg-white">
             <AvatarImage
               src={currentOrganization?.image_path}
               alt={currentOrganization?.name}
-              className="object-cover"
+              className="object-cover w-full h-full"
             />
-            <AvatarFallback className="text-4xl">
+            <AvatarFallback className="text-4xl w-full h-full flex items-center justify-center">
               {currentOrganization?.name.charAt(0)}
             </AvatarFallback>
           </Avatar>
         </div>
 
-        {/* Информация справа */}
-        <div className="w-full md:w-2/3 lg:w-3/4">
+        <div className="flex-1">
           <div className="flex justify-between items-start mb-4">
-            <h1 className="text-3xl font-bold">{currentOrganization?.name}</h1>
+            <h1 className="font-inter font-semibold text-[20px]">
+              {currentOrganization?.name}
+            </h1>
           </div>
 
-          <p className="text-gray-600 mb-6">{currentOrganization?.description}</p>
+          <p className="font-manrope text-[16px] font-medium">
+            {currentOrganization?.description}
+          </p>
 
-          <div className="flex gap-4 text-sm text-gray-500">
-            {/*<div className="flex items-center">
-              <Users className="mr-2 h-4 w-4" />
-              {organization.membersCount} участников
-            </div>*/
-            }
+          <div className="flex gap-4 font-manrope text-[16px] font-medium text-gray-500 mt-3">
             <div className="flex items-center">
-              <Calendar className="mr-2 h-4 w-4" />
+              <Calendar className="mr-2 h-4 w-4 flex-shrink-0" />
               Основана в {dayjs(currentOrganization?.created_at).format("YYYY")}
             </div>
           </div>
         </div>
       </div>
-    </div>);
+    </div>
+  );
 };
 
 export default About;

@@ -6,43 +6,51 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
-import { ChevronDown, LogOut, Plus, User } from "lucide-react";
+import { ChevronDown, LogOut, Plus } from "lucide-react";
 import { AuthContext, OrganizationContext } from "@app/providers/AppRouter/AppRouter.config";
 import { useContext, useState } from "react";
 import { Organization } from "@entity/Organization";
 import { CreateOrganizationModal } from "@feature/CreateOrganization";
-
+import { logout } from "@entity/User";
+import { useNavigate } from "react-router-dom";
 
 export function Header() {
   const user = useContext(AuthContext);
   const organizationContext = useContext(OrganizationContext);
 
   const onOrgClick = (organization: Organization) => {
-    localStorage.setItem("organization", JSON.stringify(organization));
+    localStorage.setItem("organization", organization.id);
     organizationContext?.setActiveOrganization(organization);
   };
 
   const [isModalOpen, setIsModalOpen] = useState(false);
 
+  const navigate = useNavigate();
   return (
-    <header className="sticky top-0 z-50 w-full bg-background/95 backdrop-blur">
-      <div className="container flex h-16 items-center justify-between">
+    <header className="sticky top-0 z-50 w-full bg-[#F1F1F1] backdrop-blur shadow-[0px_8px_29.1px_0px_#9292920D]">
+      <div className="flex h-16 items-center justify-between px-6 py-[22px] mx-auto max-w-[1512px]">
         <div className="flex items-center gap-2">
-          <YourLogoIcon className="h-6 w-6" />
-          <span className="font-bold">MyApp</span>
+          <img
+            src="/logo.svg"
+            alt="Telehoot"
+          />
         </div>
 
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-4 font-manrope font-weight-500">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="flex items-center gap-1">
-                <span>{organizationContext?.activeOrganization.name}</span>
+                <span className="cursor-pointer">{organizationContext?.activeOrganization.name}</span>
                 <ChevronDown className="h-4 w-4 opacity-50" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent className="w-64 p-0" align="end">
+            <DropdownMenuContent className="w-64 p-0 bg-white" align="end">
               {organizationContext?.organizations?.map(organization => (
-                <DropdownMenuItem className="cursor-pointer" onClick={() => onOrgClick(organization)}>
+                <DropdownMenuItem
+                  key={organization.id}
+                  className="cursor-pointer"
+                  onClick={() => onOrgClick(organization)}
+                >
                   {organization.name}
                 </DropdownMenuItem>
               ))}
@@ -55,18 +63,22 @@ export function Header() {
           </DropdownMenu>
 
           <DropdownMenu>
-            <DropdownMenuTrigger>
-              {user?.username}
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" className="flex items-center gap-1">
+                <span className="cursor-pointer">{user?.username}</span>
+                <ChevronDown className="h-4 w-4 opacity-50" />
+              </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent className="w-56" align="end">
+            <DropdownMenuContent className="w-56 bg-white" align="end">
               <DropdownMenuLabel>Мой профиль</DropdownMenuLabel>
-              <DropdownMenuItem>
-                <User className="mr-2 h-4 w-4" />
-                <span>Профиль</span>
-              </DropdownMenuItem>
-              <DropdownMenuItem>
+              <DropdownMenuItem onClick={() => {
+                logout();
+                navigate("/login", {
+                  replace: true,
+                });
+              }}>
                 <LogOut className="mr-2 h-4 w-4" />
-                <span>Выйти</span>
+                <span className="cursor-pointer">Выйти</span>
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>

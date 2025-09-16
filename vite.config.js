@@ -16,10 +16,14 @@ export default ({ mode }) => {
     define: {
       __API__: JSON.stringify(env.VITE_API),
       __IS_DEV__: JSON.stringify(env.VITE_IS_DEV),
+      __BOT_NAME__: JSON.stringify(env.VITE_BOT_NAME),
     },
     server: {
       allowedHosts: [
-        "front.frp.vstrechya.space",
+        "front.frp.deti-durova.ru",
+        "front-stalinidze.frp.deti-durova.ru",
+        "deti-durova.online",
+        "telehoot.deti-durova.online"
       ],
     },
     plugins: [

@@ -1,4 +1,4 @@
-import { Navigate, Outlet, RouteObject } from "react-router-dom";
+import { Navigate, Outlet, RouteObject, useNavigate } from "react-router-dom";
 import {
   createContext,
   FC,
@@ -20,9 +20,18 @@ import { About } from "@pages/About";
 import { Quizzes } from "@pages/Quizzes";
 import { CreateQuiz } from "@pages/CreateQuiz";
 import { Memberships } from "@pages/Memberships";
+import { Settings } from "@pages/Settings";
+import { Loader2 } from "lucide-react";
+import { StartQuiz } from "@pages/StartQuiz";
+import { Sessions } from "@pages/Sessions";
+import { Results } from "@pages/Results";
 
 const ToLazy = (LazyComponent: LazyExoticComponent<FC>): ReactNode => (
-  <Suspense fallback={""}>
+  <Suspense fallback={
+    <div className="flex items-center justify-center h-full">
+      <Loader2 className="h-8 w-8 animate-spin text-[#0D0BCC]" />
+    </div>
+  }>
     <LazyComponent />
   </Suspense>
 );
@@ -39,19 +48,27 @@ export const OrganizationContext = createContext<OrganizationContext | null>(nul
 const OrgProvider: FC<PropsWithChildren> = props => {
   const [contextData, setContextData] = useState<OrganizationContext | null>(null);
 
+  const navigate = useNavigate();
   const { data: orgData, isLoading: orgIsLoading } = useQuery("organization", getUserOrganization);
 
+
   useEffect(() => {
+
     if (orgData?.data) {
-      const activeOrganization = localStorage.getItem("organization") ? JSON.parse(localStorage.getItem("organization") as string) : null;
+      const activeOrganizationId = localStorage.getItem("organization") ? localStorage.getItem("organization") : null;
+      const a = orgData.data.find(el => el.id === activeOrganizationId);
 
       setContextData({
         organizations: orgData.data,
-        activeOrganization: activeOrganization ? activeOrganization : orgData.data[0],
-        setActiveOrganization: (org: Organization) => setContextData(prev => ({
-          ...prev as OrganizationContext,
-          activeOrganization: org,
-        })),
+        activeOrganization: a ? a : orgData.data[0],
+        setActiveOrganization: (org: Organization) => setContextData(prev => {
+          navigate(`/organization/${org.id}/about`);
+
+          return {
+            ...prev as OrganizationContext,
+            activeOrganization: org,
+          };
+        }),
       });
     }
   }, [orgData?.data]);
@@ -63,24 +80,29 @@ const OrgProvider: FC<PropsWithChildren> = props => {
   );
 };
 
-export const ProtectedRoute = (): ReactNode => {
+export const ProtectedRoute: FC<{ withHeader?: boolean }> = (props): ReactNode => {
+  const { withHeader = true } = props;
   const { isLoading, data } = useQuery({
     queryKey: ["auth"],
     queryFn: getMe,
   });
 
   if (isLoading) {
-    return <>Loading...</>;
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <Loader2 className="h-12 w-12 animate-spin text-[#0D0BCC]" />
+      </div>
+    );
   }
 
   if (!data?.data)
     return <Navigate to="/login" replace />;
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col bg-[#F1F1F1]">
       <AuthContext.Provider value={data.data}>
         <OrgProvider>
-          <Header />
+          {withHeader && <Header />}
           <main className="flex-1">
             <Outlet />
           </main>
@@ -93,7 +115,7 @@ const RedirectToFirstOrganization: FC = () => {
   const orgContext = useContext(OrganizationContext);
 
   if (orgContext?.activeOrganization)
-    return <Navigate to={`/organization/${orgContext.activeOrganization.id}`} replace />;
+    return <Navigate to={`/organization/${orgContext.activeOrganization.id}/about`} replace />;
 };
 
 export const ROUTES: RouteObject[] = [
@@ -102,7 +124,7 @@ export const ROUTES: RouteObject[] = [
     element: <ProtectedRoute />,
     children: [
       {
-        index: true,
+        path: "/",
         element: <RedirectToFirstOrganization />,
       },
       {
@@ -117,17 +139,37 @@ export const ROUTES: RouteObject[] = [
         }, {
           path: "memberships",
           element: ToLazy(Memberships),
+        }, {
+          path: "settings",
+          element: ToLazy(Settings),
         },
         ],
       }, {
+        path: "sessions/:id",
+        element: ToLazy(Sessions),
+      },
+      {
+        path: "session/results",
+        element: ToLazy(Results),
+      },
+      {
         path: "quiz",
         element: ToLazy(CreateQuiz),
         children: [{
           path: ":id",
           element: ToLazy(CreateQuiz),
         }],
-      }],
+      },
+    ],
+  }, {
+    path: "/",
+    element: <ProtectedRoute withHeader={false} />,
+    children: [{
+      path: "startQuiz/:id",
+      element: ToLazy(StartQuiz),
+    }],
   },
+
   {
     path: "/login",
     element: ToLazy(Auth),
